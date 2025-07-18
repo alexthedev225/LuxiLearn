@@ -1,0 +1,64 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Course {
+  id           Int       @id @default(autoincrement())
+  title        String
+  description  String
+  level        String
+  technologies String[]   // tableau de strings
+  slug         String    @unique
+  duration     String
+  image        String?
+  lessons      Lesson[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Lesson {
+  id          Int       @id @default(autoincrement())
+  course      Course    @relation(fields: [courseId], references: [id])
+  courseId    Int
+  title       String
+  description String
+  duration    String
+  slug        String
+  content     String    // markdown stocké ici
+  exercise    Exercise?
+  quizzes     Quiz[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Exercise {
+  id           Int     @id @default(autoincrement())
+  lesson       Lesson  @relation(fields: [lessonId], references: [id])
+  lessonId     Int     @unique
+  description  String
+  starterCode  String?
+  solutionCode String?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Quiz {
+  id           Int      @id @default(autoincrement())
+  lesson       Lesson   @relation(fields: [lessonId], references: [id])
+  lessonId     Int
+  question     String
+  options      String[] // tableau d'options
+  correctAnswer Int
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

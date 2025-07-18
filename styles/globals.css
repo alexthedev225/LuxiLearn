@@ -1,0 +1,39 @@
+
+@import "tailwindcss";
+/* Classes pour les blocs de code dans le markdown */
+
+/* Styles communs */
+.code-editor {
+  /* Le fond et le texte seront gérés via les fichiers CSS chargés dynamiquement (atom-one-dark, etc) */
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  font-family: 'Fira Code', monospace;
+  font-size: 1rem;
+  /* Si besoin tu peux ajouter une bordure claire/sombre */
+  border: 1px solid transparent;
+  margin-bottom: 1rem;
+}
+
+/* Optionnel : un style de bordure ou ombre différent pour la zone terminal */
+.terminal {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  font-family: 'Fira Code', monospace;
+  font-size: 1rem;
+  border: 1px solid #e53e3e; /* Rouge léger pour bien différencier */
+  background-color: #1e1e1e; /* Foncé par défaut (mais ça sera override par les feuilles atom-one-dark) */
+  color: #f87171;
+  margin-bottom: 1rem;
+}
+
+/* Pour que le style highlight.js fonctionne bien */
+.hljs {
+  /* Pas besoin de background ici car tu charges les CSS via HighlightThemeLoader */
+  font-family: inherit;
+  font-size: inherit;
+}
+
+
+@config "../tailwind.config.js"
