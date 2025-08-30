@@ -1,0 +1,231 @@
+Phase 1 : Fondations en JavaScript (Débutant) 
+
+Introduction à JS et environnement de développement
+
+Variables et types de données
+
+Opérateurs et expressions
+
+Structures conditionnelles : if, else, switch
+
+Boucles : for, while, do while
+
+Fonctions classiques et fléchées
+
+Scope et closures
+
+Manipulation du DOM : sélectionner, modifier, créer des éléments
+
+Événements et écouteurs (click, input, submit)
+
+Mini-projet : Calculatrice web simple
+
+Phase 2 : JavaScript avancé / ES6+ (Intermédiaire) – 10-12 leçons
+
+Introduction aux modules JS et import/export
+
+Tableaux : méthodes classiques vs ES6 (map, filter, reduce)
+
+Objets et destructuring
+
+Spread, rest, opérateur ternaire
+
+Fonctions avancées et callbacks
+
+Asynchrone : Promises et async/await
+
+API fetch et traitement JSON
+
+Gestion d’erreurs et try/catch
+
+Bonnes pratiques JS (naming, lisibilité, DRY)
+
+Mini-projet : Todo-list avec stockage local
+
+Bonus : introduction aux événements avancés et delegation
+
+Bonus : manipulation du localStorage et sessionStorage
+
+Phase 3 : React (Intermédiaire → Avancé) – 10 leçons
+
+Introduction à React et JSX
+
+Composants fonctionnels et props
+
+State et useState
+
+useEffect et cycle de vie des composants
+
+Listes et clés
+
+Gestion des formulaires et validations
+
+Routing client avec React Router
+
+Hooks personnalisés (custom hooks)
+
+Context API pour le state global
+
+Mini-projet : Application météo ou gestionnaire de notes
+
+Phase 4 : Next.js & Fullstack (Avancé) – 8-10 leçons
+
+Introduction à Next.js et App Router
+
+Server Components vs Client Components
+
+Pages statiques et dynamiques
+
+API Routes et backend léger
+
+Authentification et sessions
+
+Mise en cache, ISR et optimisation SEO
+
+Projet final : Application CRUD complète (auth, pages dynamiques, API, database)
+
+Bonus : déploiement et configuration d’un environnement prod
+
+Phase 5 : Bonus / Perfectionnement – 5-6 leçons
+
+Tailwind CSS et UI design moderne
+
+Déploiement et CI/CD
+
+Optimisation performance et sécurité
+
+Mini-projet blog
+
+Mini-projet e-commerce simplifié
+
+Bonus : bonnes pratiques UX et accessibilité
+Prompt 1 – Génération du cours (avec recherche web)
+
+Générez un objet JSON représentant un cours complet pour le parcours LuxiLearn “Développement Web Moderne”, sans inclure les leçons détaillées. Avant de générer le contenu, effectuez une recherche web pour garantir que les informations sur les technologies (JavaScript, React, Next.js, etc.) sont fiables et à jour.
+
+Format attendu :
+
+{
+  "title": "Titre du cours",
+  "description": "Description concise du cours (max. 200 mots)",
+  "level": "débutant | intermédiaire | avancé",
+  "technologies": ["JavaScript", "HTML", "..."],
+  "slug": "slug-unique-du-cours",
+  "duration": "Durée estimée (ex. '5h')"
+}
+
+
+Instructions supplémentaires :
+
+Le cours doit être conforme au parcours LuxiLearn (JS → JS avancé → React → Next.js → fullstack).
+
+La description doit inclure les objectifs pédagogiques globaux du cours.
+
+JSON bien formaté, indentation 2 espaces.
+
+{
+  "title": "Titre de la leçon",
+  "description": "Courte description (max. 50 mots)",
+  "duration": "Durée estimée (ex. '45min')",
+  "slug": "slug-unique-de-la-lecon",
+  "content": `# Titre principal
+## Sous-titre
+Texte explicatif avec paragraphes
+Exemples de code :
+\`\`\`js
+console.log('Exemple');
+\`\`\`
+Liens officiels : [MDN](https://developer.mozilla.org/)`,
+  "exercise": {
+    "title": "Titre de l'exercice",
+    "prompt": "Consigne détaillée de l'exercice",
+    "solution": "Code fonctionnel de la solution (JS)",
+    "validateCode": "export function validate(code) { ... }"
+  },
+  "quizzes": [
+    {
+      "question": "Question du quiz",
+      "options": ["Option1", "Option2", "..."],
+      "correctAnswer": 0
+    },
+    {
+      "question": "Deuxième question du quiz",
+      "options": ["Option1", "Option2", "..."],
+      "correctAnswer": 1
+    }
+  ]
+}
+Instructions supplémentaires :
+
+Le contenu content doit maintenant être placé dans un template string JavaScript (avec `) pour conserver les retours à la ligne, les blocs de code ``` et tout Markdown intact.
+
+Markdown et code doivent rester bruts, prêts à copier-coller dans un éditeur ou un composant ReactMarkdown/Toast UI Editor.
+
+Le contenu doit être ultra détaillé et auto-suffisant : introduction, explications, exemples commentés, liens officiels vers documentation à jour (MDN, doc React/Next.js).
+
+Inclure 1 exercice et 2 quiz par leçon.
+
+La leçon doit correspondre au niveau et à la phase du parcours LuxiLearn.
+
+Le JSON doit être bien formaté avec indentation 2 espaces.
+
+Prompt LuxiLearn – Génération stricte d’une leçon (template strings)
+
+Générez un objet représentant une leçon complète. Avant de générer le contenu, effectuez une recherche web pour garantir que toutes les informations techniques (JavaScript, React, Next.js, etc.) soient fiables et à jour.
+
+Format attendu :
+
+{
+  "title": "Titre de la leçon",
+  "description": "Courte description (max. 50 mots)",
+  "duration": "Durée estimée (ex. '45min')",
+  "slug": "slug-unique-de-la-lecon",
+  "content": `template string JS avec Markdown brut détaillé incluant (#, ##), texte explicatif, exemples de code \`\`\`js ... \`\`\``,
+  "exercise": {
+    "title": "Titre de l'exercice",
+    "prompt": `template string JS du texte et code que l’étudiant voit et peut modifier dans Monaco Editor, avec énoncé sous forme de commentaires //`,
+    "solution": `template string JS du code final affichable seulement si l’étudiant demande “Voir solution” (non utilisé pour validation)`,
+    "validateCode": `template string JS d’une fonction JS simple et efficace qui valide uniquement si l’objectif pédagogique est atteint.
+// Exemple de référence : pour d’autres leçons (Next.js, React, etc.), la fonction sera différente selon l’objectif.
+(code) => {
+  const normalized = code.replace(/\\s+/g, " ").toLowerCase();
+  if (!/console\\.log\\(\\s*['\"][^'\"]+['\"]\\s*\\);?/.test(normalized)) {
+    return { success: false, message: "Vous devez utiliser console.log pour afficher le message attendu." };
+  }
+  return { success: true };
+}`
+  },
+  "quizzes": [
+    {
+      "question": "Question du quiz",
+      "options": ["Option1", "Option2", "..."],
+      "correctAnswer": 0
+    },
+    {
+      "question": "Deuxième question du quiz",
+      "options": ["Option1", "Option2", "..."],
+      "correctAnswer": 1
+    }
+  ]
+}
+
+
+Instructions supplémentaires :
+
+Les sections content, prompt, solution et validateCode doivent absolument être en template string JS, et non dans des guillemets doubles. C’est un JSON “adapté” pour LuxiLearn et Monaco Editor.
+
+Le contenu Markdown (content) doit être ultra détaillé et auto-suffisant, incluant introduction, explications, exemples commentés et liens officiels vers documentation à jour (MDN, doc React/Next.js).
+
+prompt → texte + code que l’étudiant édite dans Monaco Editor, avec énoncé sous forme de commentaires // uniquement, pas de texte explicatif visible à l’étudiant.
+
+solution → code final affichable seulement si l’étudiant demande “Voir solution”. Ce n’est pas la validation réelle.
+
+validateCode → fonction JS qui valide uniquement si l’objectif pédagogique est atteint. L’exemple fourni est référence ; pour d’autres leçons (Next.js, React, etc.), la fonction sera différente.
+
+Inclure 1 exercice et 2 quiz par leçon.
+
+Markdown et code doivent rester bruts pour pouvoir être copiés-collés directement dans un éditeur ou Monaco Editor.
+
+JSON doit être bien formaté avec indentation de 2 espaces.
+
+La leçon doit correspondre au niveau et à la phase du parcours LuxiLearn.

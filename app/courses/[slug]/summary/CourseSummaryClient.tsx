@@ -1,19 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useProgressStore } from "@/stores/useProgressStore";
 import { useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
-import { Button } from "@heroui/button";
-import { Card, CardBody } from "@heroui/card";
-import NextLink from "next/link";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  AnimatePresence,
+  useInView,
+} from "framer-motion";
 
 interface Lesson {
   slug: string;
   title: string;
-  // autres propriétés possibles
 }
-
 interface Course {
   id: string | number;
   title: string;
@@ -25,7 +27,6 @@ interface Course {
   lessons: Lesson[];
   slug: string;
 }
-
 interface LessonProgress {
   lessonSlug: string;
   title: string;
@@ -34,13 +35,109 @@ interface LessonProgress {
   errorCount: number;
   completed: boolean;
 }
-
 interface Props {
   course: Course;
 }
 
+const Separator = () => (
+  <motion.div
+    initial={{ opacity: 0, scaleX: 0 }}
+    animate={{ opacity: 1, scaleX: 1 }}
+    transition={{ duration: 0.15 }}
+    viewport={{ once: true }}
+    className="w-full h-px sm:h-0.5 bg-red-600 border-t border-b border-black dark:border-white transform skew-x-2 max-w-4xl mx-auto"
+    aria-hidden="true"
+  />
+);
+
+const ProgressCard = ({
+  progress,
+  index,
+  courseSlug,
+}: {
+  progress: LessonProgress;
+  index: number;
+  courseSlug: string;
+}) => {
+  const cardRef = useRef(null);
+  const isInView = useInView(cardRef, { once: true, margin: "-50px" });
+  const scorePercent =
+    progress.totalQuestions > 0
+      ? (progress.score / progress.totalQuestions) * 100
+      : 0;
+
+  return (
+    <motion.div
+      ref={cardRef}
+      initial={{ opacity: 0, y: 20 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+      transition={{ duration: 0.3, delay: index * 0.1 }}
+      className="group"
+      aria-label={`Progrès de la leçon ${progress.title}`}
+    >
+      <motion.div
+        whileHover={{ translateY: -0.5 }}
+        className="relative bg-white dark:bg-neutral-950 border-2 border-black dark:border-white p-2 sm:p-3 transition-transform duration-200 rounded"
+      >
+        {/* Score Badge */}
+        <div className="absolute top-2 sm:top-3 right-2 sm:right-3 px-2 py-0.5 rounded text-2xs sm:text-xs font-bold text-red-600 border-2 border-red-600">
+          {scorePercent.toFixed(0)}%
+        </div>
+
+        {/* Content */}
+        <div className="pr-8 sm:pr-10">
+          <h3
+            className="text-base sm:text-lg font-black tracking-wide uppercase text-neutral-900 dark:text-neutral-100 mb-1 sm:mb-2"
+            style={{ fontSize: "clamp(0.875rem, 2vw, 1rem)" }}
+          >
+            {progress.title}
+          </h3>
+
+          <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3 text-xs sm:text-sm">
+            <div className="flex items-center gap-1 sm:gap-2">
+              <span aria-hidden="true">🎯</span>
+              <span>
+                Score: {progress.score}/{progress.totalQuestions}
+              </span>
+            </div>
+            <div className="flex items-center gap-1 sm:gap-2">
+              <span aria-hidden="true">❌</span>
+              <span>{progress.errorCount}</span>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex-1 h-1 sm:h-1.5 bg-black dark:bg-white rounded overflow-hidden">
+              <motion.div
+                initial={{ width: "0%" }}
+                whileInView={{ width: `${scorePercent}%` }}
+                className="h-full bg-red-600"
+                transition={{ duration: 0.5 }}
+              />
+            </div>
+            <span className="text-2xs sm:text-xs font-bold text-neutral-900 dark:text-neutral-100">
+              {progress.completed ? "TERMINÉ" : "EN COURS"}
+            </span>
+          </div>
+        </div>
+
+        {/* Left accent line */}
+        <div className="absolute left-0 top-2 sm:top-3 bottom-2 sm:bottom-3 w-0.5 sm:w-1 bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+      </motion.div>
+    </motion.div>
+  );
+};
+
 export default function CourseSummaryClient({ course }: Props) {
   const router = useRouter();
+  const headerRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: headerRef,
+    offset: ["start start", "end start"],
+  });
+  const opacity = useTransform(scrollYProgress, [0, 0.3], [1, 0.8]);
+  const y = useTransform(scrollYProgress, [0, 1], [0, -50]);
 
   const getLessonProgress = useProgressStore(
     (state) => state.getLessonProgress
@@ -56,20 +153,17 @@ export default function CourseSummaryClient({ course }: Props) {
 
   useEffect(() => {
     if (!course?.lessons) return;
-
-    const progresses: LessonProgress[] = course.lessons.map(
-      (lesson: Lesson) => {
-        const progress = getLessonProgress(course.slug, lesson.slug);
-        return {
-          lessonSlug: lesson.slug,
-          title: lesson.title,
-          score: progress?.score ?? 0,
-          totalQuestions: progress?.totalQuestions ?? 0,
-          errorCount: progress?.errorCount ?? 0,
-          completed: progress?.completed ?? false,
-        };
-      }
-    );
+    const progresses: LessonProgress[] = course.lessons.map((lesson) => {
+      const progress = getLessonProgress(course.slug, lesson.slug);
+      return {
+        lessonSlug: lesson.slug,
+        title: lesson.title,
+        score: progress?.score ?? 0,
+        totalQuestions: progress?.totalQuestions ?? 0,
+        errorCount: progress?.errorCount ?? 0,
+        completed: progress?.completed ?? false,
+      };
+    });
     setLessonProgresses(progresses);
   }, [course, getLessonProgress]);
 
@@ -89,42 +183,9 @@ export default function CourseSummaryClient({ course }: Props) {
 
   useEffect(() => {
     if (globalScorePercent === 100) {
-      confetti({
-        particleCount: 200,
-        spread: 100,
-        origin: { y: 0.6 },
-      });
+      confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
     }
   }, [globalScorePercent]);
-
-  const renderFeedbackMessage = () => {
-    if (globalScorePercent === 100) {
-      return (
-        <p className="text-green-500 font-semibold text-lg mt-4">
-          🎉 Félicitations ! Tu as obtenu un score parfait. Excellent travail !
-        </p>
-      );
-    }
-    if (globalScorePercent >= 80) {
-      return (
-        <p className="text-blue-500 font-semibold text-lg mt-4">
-          Très bon score ! Tu maîtrises bien ce cours.
-        </p>
-      );
-    }
-    if (globalScorePercent >= 50) {
-      return (
-        <p className="text-yellow-500 font-semibold text-lg mt-4">
-          Tu progresses bien, continue à t'exercer pour t'améliorer.
-        </p>
-      );
-    }
-    return (
-      <p className="text-red-500 font-semibold text-lg mt-4">
-        Ne te décourage pas ! Reprends certaines leçons pour t'améliorer.
-      </p>
-    );
-  };
 
   const handleRestart = () => {
     resetCourseProgress(course.slug);
@@ -135,97 +196,82 @@ export default function CourseSummaryClient({ course }: Props) {
     }
   };
 
-  useEffect(() => {
-    setHasHydrated(true);
-  }, []);
-
+  useEffect(() => setHasHydrated(true), []);
   if (!hasHydrated) return null;
 
   return (
-    <div className="min-h-screen bg-background text-foreground dark:bg-background-dark dark:text-foreground-dark py-20 px-6">
-      <section className="max-w-4xl mx-auto mb-12">
-        <h1 className="text-4xl font-bold mb-6 dark:text-white">
-          Résumé du cours : {course.title}
+    <div className="max-w-4xl mx-auto min-h-screen text-neutral-900 dark:text-neutral-100 py-6 sm:py-32 px-4 sm:px-6">
+      {/* Header */}
+      <motion.section
+        ref={headerRef}
+        style={{ opacity, y }}
+        className="py-6 sm:pb-8"
+      >
+        <h1
+          className="text-2xl sm:text-3xl md:text-4xl font-black tracking-wide uppercase text-neutral-900 dark:text-neutral-100 mb-2 sm:mb-3"
+          style={{ fontSize: "clamp(1.5rem, 3vw, 2.25rem)" }}
+        >
+          RÉSUMÉ
         </h1>
+        <p
+          className="text-base sm:text-lg md:text-xl font-bold mb-4 sm:mb-6"
+          style={{ fontSize: "clamp(0.875rem, 2vw, 1.25rem)" }}
+        >
+          {course.title}
+        </p>
 
-        <Card className="mb-8 bg-content1 dark:bg-content1-dark border border-border rounded-xl">
-          <CardBody className="p-6">
-            <p className="mb-2">
-              <strong>Leçons terminées :</strong> {lessonsCompleted} /{" "}
-              {totalLessons}
-            </p>
-            <p className="mb-2">
-              <strong>Questions répondues :</strong> {totalScore} /{" "}
-              {totalQuestions}
-            </p>
-            <p className="mb-2">
-              <strong>Nombre total d’erreurs :</strong> {totalErrors}
-            </p>
-            <p className="mb-4 text-green-600 font-semibold">
-              Score global : {globalScorePercent.toFixed(2)}%
-            </p>
+        {/* Global Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
+          <div className="p-2 sm:p-3 border-2 border-black dark:border-white text-center font-bold uppercase text-xs sm:text-sm rounded">
+            Leçons: {lessonsCompleted}/{totalLessons}
+          </div>
+          <div className="p-2 sm:p-3 border-2 border-black dark:border-white text-center font-bold uppercase text-xs sm:text-sm rounded">
+            Score: {totalScore}/{totalQuestions}
+          </div>
+          <div className="p-2 sm:p-3 border-2 border-black dark:border-white text-center font-bold uppercase text-xs sm:text-sm rounded">
+            Erreurs: {totalErrors}
+          </div>
+          <div className="p-2 sm:p-3 border-2 border-black dark:border-white text-center font-bold uppercase text-xs sm:text-sm rounded">
+            Total: {globalScorePercent.toFixed(0)}%
+          </div>
+        </div>
 
-            {renderFeedbackMessage()}
-          </CardBody>
-        </Card>
-
-        <h2 className="text-2xl font-semibold mb-4 dark:text-white">
-          Détail par leçon
-        </h2>
-
-        {lessonProgresses.map((p: LessonProgress) => (
-          <Card
-            key={p.lessonSlug}
-            className="mb-6 bg-content2 dark:bg-content2-dark border border-border rounded-lg"
+        <div className="flex flex-wrap gap-1 sm:gap-2">
+          <button
+            onClick={() => router.push(`/courses/${course.slug}`)}
+            className="px-2 py-1 sm:px-3 sm:py-1.5 border-2 border-black dark:border-white bg-white dark:bg-neutral-950 font-bold uppercase tracking-wide text-xs sm:text-sm hover:-translate-y-0.5 transition-transform duration-200 rounded"
+            aria-label="Retour au cours"
           >
-            <CardBody className="p-6 flex justify-between items-start ">
-              <div className="flex flex-col gap-1 mb-8">
-                <h3 className="font-semibold text-lg dark:text-white">
-                  {p.title}
-                </h3>
-                <p
-                  className={`text-sm ${
-                    p.completed ? "text-green-600" : "text-red-600"
-                  }`}
-                >
-                  {p.completed ? "Terminée" : "Non terminée"}
-                </p>
-              </div>
-
-              <div className="flex gap-10 font-semibold text-foreground/90 dark:text-white/90">
-                <div className="flex items-center gap-3">
-                  <span className="text-green-600 text-xl">🎯</span>
-                  <span>
-                    Score : {p.score} / {p.totalQuestions}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-red-600 text-xl">❌</span>
-                  <span>Erreurs : {p.errorCount}</span>
-                </div>
-              </div>
-
-              <div style={{ width: "48px" }} />
-            </CardBody>
-          </Card>
-        ))}
-
-        <section className="mt-8 flex justify-between">
-          <Button
-            as={NextLink}
-            href={`/courses/${course.slug}`}
-            className="bg-black text-white font-semibold px-6 py-3 rounded-xl shadow-md hover:bg-gray-900 transition"
-          >
-            Retour au cours
-          </Button>
-
-          <Button
+            ← Cours
+          </button>
+          <button
             onClick={handleRestart}
-            className="bg-blue-600 text-white font-semibold px-6 py-3 rounded-xl shadow-md hover:bg-blue-700 transition"
+            className="px-2 py-1 sm:px-3 sm:py-1.5 bg-red-600 text-white font-bold uppercase tracking-wide border-2 border-red-600 text-xs sm:text-sm hover:-translate-y-0.5 transition-transform duration-200 rounded"
+            aria-label="Recommencer le cours"
           >
-            Recommencer le cours
-          </Button>
-        </section>
+            Rejouer
+          </button>
+        </div>
+      </motion.section>
+
+      <Separator />
+
+      {/* Lesson Progress */}
+      <section className="py-6 sm:py-8">
+        <div className="space-y-2 sm:space-y-3">
+          <AnimatePresence>
+            {lessonProgresses.map((progress, index) => (
+              <div key={progress.lessonSlug}>
+                <ProgressCard
+                  progress={progress}
+                  index={index}
+                  courseSlug={course.slug}
+                />
+                {index < lessonProgresses.length - 1 && <Separator />}
+              </div>
+            ))}
+          </AnimatePresence>
+        </div>
       </section>
     </div>
   );

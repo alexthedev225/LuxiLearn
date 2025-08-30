@@ -1,290 +1,110 @@
 "use client";
 
-import {
-  Navbar as HeroUINavbar,
-  NavbarContent,
-  NavbarMenu,
-  NavbarMenuToggle,
-  NavbarBrand,
-  NavbarItem,
-  NavbarMenuItem,
-} from "@heroui/navbar";
-import { Button } from "@heroui/button";
-import { Kbd } from "@heroui/kbd";
-import { Link } from "@heroui/link";
-import { Input } from "@heroui/input";
-import LinkNext from "next/link";
-import clsx from "clsx";
+import { useState } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { Menu, X } from "lucide-react";
 
-import { siteConfig } from "@/config/site";
-import { ThemeSwitch } from "@/components/theme-switch";
-import {
-  GithubIcon,
-  DiscordIcon,
-  SearchIcon,
-} from "@/components/icons";
-import React from "react";
+const links = [
+  { href: "/", label: "Accueil" },
+  { href: "/courses", label: "Cours" },
+  { href: "/about", label: "À propos" },
+  { href: "/contact", label: "Contact" },
+];
 
-export const Navbar = () => {
-  const [searchOpen, setSearchOpen] = React.useState(false);
-  const [isScrolled, setIsScrolled] = React.useState(false);
-  const [activeItem, setActiveItem] = React.useState("/");
+// Neo-Brutalist Separator for Mobile Menu
+const Separator = () => (
+  <motion.div
+    initial={{ opacity: 0, scaleX: 0 }}
+    animate={{ opacity: 1, scaleX: 1 }}
+    transition={{ duration: 0.2 }}
+    className="w-full h-px sm:h-0.5 bg-red-600 border-t border-b border-black dark:border-white transform skew-x-2"
+    aria-hidden="true"
+  />
+);
 
-  // Detect scroll for navbar background blur effect
-  React.useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const searchInput = (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.2 }}
-      className="relative"
-    >
-      <Input
-        aria-label="Rechercher un cours"
-        classNames={{
-          inputWrapper: clsx(
-            "bg-background/60 backdrop-blur-md border border-divider/30",
-            "hover:bg-background/80 hover:border-primary/30 transition-all duration-300",
-            "focus-within:bg-background/90 focus-within:border-primary/50 focus-within:shadow-lg focus-within:shadow-primary/20"
-          ),
-          input: "text-sm text-foreground placeholder:text-muted-foreground",
-        }}
-        endContent={
-          <div className="flex items-center gap-2">
-            <Kbd
-              className="hidden lg:inline-block bg-muted/50 text-xs"
-              keys={["command"]}
-            >
-              K
-            </Kbd>
-          </div>
-        }
-        placeholder="Rechercher des cours..."
-        startContent={
-          <SearchIcon className="text-muted-foreground group-focus-within:text-primary transition-colors" />
-        }
-        type="search"
-        variant="flat"
-        radius="full"
-      />
-    </motion.div>
-  );
-
-  const navItems = [
-    { href: "/", label: "Accueil" },
-    { href: "/courses", label: "Cours" },
-    { href: "/about", label: "À propos" },
-    { href: "/contact", label: "Contact" },
-  ];
-
-
+export default function Navbar() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <HeroUINavbar
-      isBordered={false}
-      position="sticky"
-      maxWidth="xl"
-      className={clsx(
-        "transition-all duration-300 ease-in-out",
-        isScrolled
-          ? "bg-background/80 backdrop-blur-xl shadow-lg shadow-black/5 border-b border-divider/30"
-          : "bg-background/95 backdrop-blur-lg"
-      )}
-      classNames={{
-        wrapper: "px-4 sm:px-6 lg:px-8",
-        base: "backdrop-blur-xl",
-      }}
+    <motion.header
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-neutral-950 border-b-2 border-black dark:border-white"
     >
-      {/* Brand + Navigation Desktop */}
-      <NavbarContent justify="start" className="basis-1/3">
-        <NavbarBrand as="li">
-          <LinkNext href="/" className="flex items-center gap-3 group">
-            <motion.div
-              whileHover={{ scale: 1.05, rotate: 5 }}
-              whileTap={{ scale: 0.95 }}
-              className="relative"
-            >
-              <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-sm">L</span>
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-br from-primary to-secondary rounded-lg opacity-0 group-hover:opacity-20 transition-opacity blur-xl"></div>
-            </motion.div>
-            <span className="font-bold text-xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              LuxiLearn
-            </span>
-          </LinkNext>
-        </NavbarBrand>
+      <nav className="max-w-4xl mx-auto py-2 sm:py-3 flex items-center justify-between gap-2 sm:gap-4 px-4 sm:px-6">
+        {/* Logo */}
+        <div className="flex items-center">
+          <Link
+            href="/"
+            className="text-lg sm:text-xl md:text-2xl font-black uppercase tracking-wide text-red-600"
+            style={{ fontSize: "clamp(1rem, 2.5vw, 1.5rem)" }}
+            aria-label="Retour à l'accueil"
+          >
+            LuxiLearn
+          </Link>
+        </div>
 
-        {/* Navigation Links Desktop */}
-        <ul className="hidden lg:flex gap-2 ml-8">
-          {navItems.map((item) => (
-            <NavbarItem
-              as={motion.li}
-              key={item.href}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.95 }}
+        {/* Desktop Menu */}
+        <div className="hidden md:flex items-center gap-2 sm:gap-4">
+          {links.map(({ href, label }) => (
+            <Link
+              key={href}
+              href={href}
+              className="flex items-center gap-1 px-1.5 py-0.5 border-2 border-black dark:border-white font-bold uppercase tracking-wide text-xs sm:text-sm text-neutral-900 dark:text-neutral-100 hover:text-red-600 hover:border-red-600 hover:-translate-y-0.5 transition-all duration-200 rounded"
+              aria-current={href === "/" ? "page" : undefined}
             >
-              <LinkNext
-                href={item.href}
-                className={clsx(
-                  "relative px-4 py-2 rounded-full font-medium transition-all duration-300 flex items-center gap-2 group",
-                  activeItem === item.href
-                    ? "text-primary"
-                    : "text-foreground hover:text-primary hover:underline-offset-2"
-                )}
-                onClick={() => setActiveItem(item.href)}
-              >
-                <span className="relative">
-                  {item.label}
-                  {activeItem === item.href && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary rounded-full"
-                      initial={false}
-                      transition={{
-                        type: "spring",
-                        stiffness: 500,
-                        damping: 30,
-                      }}
-                    />
-                  )}
-                </span>
-              </LinkNext>
-            </NavbarItem>
+              {label}
+            </Link>
           ))}
-        </ul>
-      </NavbarContent>
+        </div>
 
-      {/* Search & Actions */}
-      <NavbarContent justify="end" className="basis-1/3 items-center gap-3">
-        {/* Search Input Desktop */}
-        <NavbarItem className="hidden lg:flex w-[300px]">
-          {searchInput}
-        </NavbarItem>
-
-        {/* Actions Desktop */}
-        <NavbarItem className="hidden sm:flex items-center gap-3">
-          {/* Theme Switch */}
-          <ThemeSwitch />
-        </NavbarItem>
-
-        {/* Mobile Search Toggle */}
-        <NavbarItem className="sm:hidden">
-          <Button
-            variant="light"
-            size="sm"
-            onPress={() => setSearchOpen(!searchOpen)}
-            aria-label="Afficher la recherche"
-            className="text-muted-foreground hover:text-primary transition-colors"
-            isIconOnly
+        {/* Mobile Hamburger */}
+        <div className="flex items-center md:hidden">
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+            aria-expanded={mobileMenuOpen}
+            className="p-1 border-2 border-black dark:border-white text-neutral-900 dark:text-neutral-100 hover:text-red-600 hover:border-red-600 transition-all duration-200 rounded"
           >
-            <SearchIcon className="w-5 h-5" />
-          </Button>
-        </NavbarItem>
+            {mobileMenuOpen ? (
+              <X className="w-4 h-4" />
+            ) : (
+              <Menu className="w-4 h-4" />
+            )}
+          </button>
+        </div>
+      </nav>
 
-        {/* Mobile Menu Toggle */}
-        <NavbarContent justify="end" className="sm:hidden basis-auto pl-2">
-          <NavbarMenuToggle className="text-foreground hover:text-primary transition-colors" />
-        </NavbarContent>
-      </NavbarContent>
-
-      {/* Mobile Search Bar */}
+      {/* Mobile Menu */}
       <AnimatePresence>
-        {searchOpen && (
+        {mobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
+            initial={{ opacity: 0, maxHeight: 0 }}
+            animate={{ opacity: 1, maxHeight: "100vh" }}
+            exit={{ opacity: 0, maxHeight: 0 }}
             transition={{ duration: 0.2 }}
-            className="sm:hidden px-4 pb-4"
+            className="md:hidden border-t-2 border-black dark:border-white bg-white dark:bg-neutral-950 overflow-hidden"
           >
-            {searchInput}
+            <nav className="flex flex-col p-2 sm:p-3 gap-2 sm:gap-3">
+              {links.map(({ href, label }, index) => (
+                <div key={href}>
+                  <Link
+                    href={href}
+                    className="flex items-center gap-1 px-1.5 py-0.5 border-2 border-black dark:border-white font-bold uppercase tracking-wide text-xs text-neutral-900 dark:text-neutral-100 hover:text-red-600 hover:border-red-600 hover:-translate-y-0.5 transition-all duration-200 rounded"
+                    onClick={() => setMobileMenuOpen(false)}
+                    aria-current={href === "/" ? "page" : undefined}
+                  >
+                    {label}
+                  </Link>
+                  {index < links.length - 1 && <Separator />}
+                </div>
+              ))}
+            </nav>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Mobile Menu */}
-      <NavbarMenu className="bg-background/95 backdrop-blur-xl border-divider/30">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="flex flex-col gap-4 px-4 py-6"
-        >
-          {/* Mobile Navigation */}
-          <div className="flex flex-col gap-2">
-            {navItems.map((item, i) => (
-              <motion.div
-                key={item.href}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.2, delay: i * 0.1 }}
-              >
-                <NavbarMenuItem>
-                  <Link
-                    href={item.href}
-                    className={clsx(
-                      "flex items-center gap-3 p-3 rounded-xl font-medium transition-all duration-200",
-                      activeItem === item.href
-                        ? "text-primary bg-primary/10"
-                        : "text-foreground hover:text-primary hover:bg-primary/5"
-                    )}
-                  >
-                    <span>{item.label}</span>
-                  </Link>
-                </NavbarMenuItem>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Mobile Theme Switch */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.2, delay: 0.4 }}
-            className="flex items-center justify-between p-3 rounded-xl bg-muted/20"
-          >
-            <span className="font-medium text-foreground">Thème</span>
-            <ThemeSwitch />
-          </motion.div>
-
-          {/* Mobile Social Links */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.2, delay: 0.5 }}
-            className="flex items-center gap-4 p-3 rounded-xl bg-muted/20"
-          >
-            <span className="font-medium text-foreground">Suivez-nous</span>
-            <div className="flex gap-3">
-              <Link
-                isExternal
-                aria-label="GitHub LuxiLearn"
-                href={siteConfig.links.github}
-                className="text-muted-foreground hover:text-primary transition-colors p-2 rounded-full hover:bg-primary/10"
-              >
-                <GithubIcon className="w-5 h-5" />
-              </Link>
-              <Link
-                isExternal
-                aria-label="Discord LuxiLearn"
-                href={siteConfig.links.discord}
-                className="text-muted-foreground hover:text-primary transition-colors p-2 rounded-full hover:bg-primary/10"
-              >
-                <DiscordIcon className="w-5 h-5" />
-              </Link>
-            </div>
-          </motion.div>
-        </motion.div>
-      </NavbarMenu>
-    </HeroUINavbar>
+    </motion.header>
   );
-};
+}

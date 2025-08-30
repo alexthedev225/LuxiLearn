@@ -18,11 +18,11 @@ const readMarkdown = (slug, courseSlug) => {
 };
 
 async function main() {
-  const courses = await getCourses(); // attendre la récupération des cours
-  await prisma.quiz.deleteMany();
-  await prisma.exercise.deleteMany();
-  await prisma.lesson.deleteMany();
-  await prisma.course.deleteMany();
+  const courses = await getCourses();
+await prisma.quiz.deleteMany();
+await prisma.exercise.deleteMany();
+await prisma.lesson.deleteMany();
+await prisma.course.deleteMany();
 
   for (const course of courses) {
     const createdCourse = await prisma.course.create({
@@ -35,31 +35,40 @@ async function main() {
         duration: course.duration,
         image: course.image,
         lessons: {
-          create: course.lessons.map((lesson) => ({
-            title: lesson.title,
-            description: lesson.description,
-            duration: lesson.duration,
-            slug: lesson.slug,
-            content: lesson.content ?? readMarkdown(lesson.slug, course.slug),
-            exercise: lesson.exercise
-              ? {
-                  create: {
-                    description: lesson.exercise.description,
-                    starterCode: lesson.exercise.starterCode,
-                    solutionCode: lesson.exercise.solutionCode,
-                  },
-                }
-              : undefined,
-            quizzes: lesson.quiz
-              ? {
-                  create: lesson.quiz.map((q) => ({
-                    question: q.question,
-                    options: q.options,
-                    correctAnswer: q.correctAnswer,
-                  })),
-                }
-              : undefined,
-          })),
+          create: course.lessons.map((lesson) => {
+            // Protection pour quiz : s'assurer que c'est un tableau et qu'il n'est pas vide
+            const quizzesArray =
+              Array.isArray(lesson.quiz) && lesson.quiz.length > 0
+                ? lesson.quiz
+                : [];
+
+            return {
+              title: lesson.title,
+              description: lesson.description,
+              duration: lesson.duration,
+              slug: lesson.slug,
+              content: lesson.content ?? readMarkdown(lesson.slug, course.slug),
+              exercise: lesson.exercise
+                ? {
+                    create: {
+                      description: lesson.exercise.description,
+                      starterCode: lesson.exercise.starterCode ?? "",
+                      solutionCode: lesson.exercise.solutionCode ?? "",
+                    },
+                  }
+                : undefined,
+              quizzes:
+                quizzesArray.length > 0
+                  ? {
+                      create: quizzesArray.map((q) => ({
+                        question: q.question,
+                        options: q.options,
+                        correctAnswer: q.correctAnswer,
+                      })),
+                    }
+                  : undefined,
+            };
+          }),
         },
       },
     });

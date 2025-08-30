@@ -1,37 +1,58 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@heroui/button";
-import { Card, CardBody } from "@heroui/card";
 import NextLink from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
+import { motion } from "framer-motion";
 import rehypeHighlight from "rehype-highlight";
 import confetti from "canvas-confetti";
 import ExerciseInteractive from "./ExerciseInteractive";
 import { useProgressStore } from "@/stores/useProgressStore";
 import type { Course, Lesson } from "./types";
-import { usePathname } from "next/navigation";
-
 type Props = {
   course: Course;
   lesson: Lesson;
 };
 type ValidationResult = true | string | { success: boolean; message?: string };
 
+const Separator = () => (
+  <motion.div
+    initial={{ opacity: 0, scaleX: 0 }}
+    animate={{ opacity: 1, scaleX: 1 }}
+    transition={{ duration: 0.15 }}
+    viewport={{ once: true }}
+    className="w-full h-px sm:h-0.5 bg-red-600 border-t border-b border-black dark:border-white transform skew-x-2 max-w-4xl mx-auto"
+    aria-hidden="true"
+  />
+);
+
 export default function ClientLessonContent({ course, lesson }: Props) {
   const { setLessonProgress, getLessonProgress } = useProgressStore();
   const [answers, setAnswers] = useState<(number | undefined)[]>([]);
   const [showScore, setShowScore] = useState(false);
   const [score, setScore] = useState(0);
-  const pathname = usePathname();
-
   const [validateFn, setValidateFn] = useState<
     ((args: { code: string }) => ValidationResult) | null
   >(null);
-
   const [exerciseCompleted, setExerciseCompleted] = useState(false);
+
+  const safeFunctionFromString = (
+    fnString: string
+  ): ((args: { code: string }) => ValidationResult) | null => {
+    try {
+      const fn = new Function(`return (${fnString})`)();
+      if (typeof fn === "function") return fn;
+      return null;
+    } catch (err) {
+      console.error(
+        "Erreur lors de la création de la fonction de validation :",
+        err
+      );
+      return null;
+    }
+  };
 
   useEffect(() => {
     if (!lesson) return;
@@ -42,6 +63,15 @@ export default function ClientLessonContent({ course, lesson }: Props) {
       setAnswers(new Array(lesson.quizzes.length).fill(undefined));
     }
   }, [lesson, getLessonProgress, course.slug]);
+
+  useEffect(() => {
+    if (lesson?.exercise?.validateCode) {
+      const fn = safeFunctionFromString(lesson.exercise.validateCode);
+      setValidateFn(() => fn);
+    } else {
+      setValidateFn(null);
+    }
+  }, [lesson]);
 
   const handleValidateQuiz = () => {
     if (!lesson || !lesson.quizzes) return;
@@ -56,16 +86,10 @@ export default function ClientLessonContent({ course, lesson }: Props) {
       return answer !== lesson.quizzes![idx].correctAnswer ? acc + 1 : acc;
     }, 0);
 
-    // Déclenche confetti si pas d'erreur
     if (errorCount === 0) {
-      confetti({
-        particleCount: 150,
-        spread: 90,
-        origin: { y: 0.6 },
-      });
+      confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
     }
 
-    // Mets à jour le store de progression
     setLessonProgress(course.slug, lesson.slug, {
       score: calculatedScore,
       totalQuestions: lesson.quizzes.length,
@@ -74,30 +98,9 @@ export default function ClientLessonContent({ course, lesson }: Props) {
       answersHistory: answers,
     });
 
-    // Mets à jour l'état local
     setScore(calculatedScore);
     setShowScore(true);
   };
-
-  useEffect(() => {
-    const loadValidateFn = async () => {
-      try {
-        const segments = pathname.split("/").filter(Boolean);
-        const courseSlug = segments[1];
-        const lessonSlug = segments[3];
-
-        const mod = await import(
-          `@/data/exercises/${courseSlug}/${lessonSlug}.js`
-        );
-        setValidateFn(() => mod.default?.validate ?? null);
-      } catch (e) {
-        console.warn("❌ validate() non trouvée:", e);
-        setValidateFn(null);
-      }
-    };
-
-    if (pathname) loadValidateFn();
-  }, [pathname]);
 
   const handleAnswer = (quizIndex: number, optionIndex: number) => {
     setAnswers((prev) => {
@@ -111,12 +114,10 @@ export default function ClientLessonContent({ course, lesson }: Props) {
     const lines = str.split("\n");
     while (lines.length && lines[0].trim() === "") lines.shift();
     while (lines.length && lines[lines.length - 1].trim() === "") lines.pop();
-
     const indentLengths = lines
       .filter((line) => line.trim().length > 0)
       .map((line) => line.match(/^(\s*)/)![1].length);
     const minIndent = Math.min(...indentLengths);
-
     return lines.map((line) => line.slice(minIndent)).join("\n");
   }
 
@@ -125,15 +126,12 @@ export default function ClientLessonContent({ course, lesson }: Props) {
   const currentLessonIndex = Array.isArray(course.lessons)
     ? course.lessons.findIndex((l) => l.slug === lesson.slug)
     : -1;
-
   const unescapeBackticks = (str: string) => str.replace(/\\`/g, "`");
-
   const nextLesson =
     currentLessonIndex !== -1 && currentLessonIndex < course.lessons.length - 1
       ? course.lessons[currentLessonIndex + 1]
       : null;
 
-  // Conditions pour afficher bouton suivant ou résumé
   const allQuizAnswered = lesson.quizzes
     ? answers.length === lesson.quizzes.length &&
       answers.every((a) => a !== undefined)
@@ -147,49 +145,69 @@ export default function ClientLessonContent({ course, lesson }: Props) {
     (!lesson.exercise || exerciseCompleted);
 
   return (
-    <div className="min-h-screen bg-background text-foreground dark:bg-background-dark dark:text-foreground-dark py-20 px-6">
-      {/* En-tête */}
-      <section className="max-w-4xl mx-auto mb-12">
-        <h1 className="text-4xl sm:text-5xl font-bold mb-4 dark:text-white">
-          {lesson.title}
-        </h1>
-        <p className="text-xl text-foreground/80 dark:text-white/80 mb-4">
-          {lesson.description}
-        </p>
-        <div className="flex gap-4 text-sm text-foreground/70 dark:text-white/70 mb-6">
-          <span>Durée : {lesson.duration}</span>
-          <span>Cours : {course.title}</span>
-        </div>
-        <Button
-          as={NextLink}
-          href={`/courses/${course.slug}`}
-          className="border border-foreground/20 bg-transparent text-foreground font-medium hover:bg-foreground/10 dark:hover:bg-white/10 rounded-lg px-4 py-2 transition-all duration-300 backdrop-blur-sm"
-        >
-          ← Retour au cours
-        </Button>
+    <div className="min-h-screen max-w-4xl mx-auto  text-neutral-900 dark:text-neutral-100 py-32 px-4 sm:px-6">
+      {/* Header & Navigation */}
+      <section className="mb-6 sm:mb-8">
+        <nav className="mb-4 sm:mb-6">
+          <div className="flex items-center gap-1 text-2xs sm:text-xs font-bold uppercase tracking-wide">
+            <NextLink
+              href={`/courses/${course.slug}`}
+              className="hover:text-red-600 transition-transform duration-200 px-1 py-0.5"
+              aria-label="Retour au cours"
+              aria-current="page"
+            >
+              {course.title.toUpperCase()}
+            </NextLink>
+            <span>→</span>
+            <span>LEÇON</span>
+          </div>
+        </nav>
+
+        <header className="mb-4 sm:mb-6">
+          <div className="h-0.5 sm:h-1 bg-red-600 w-8 sm:w-12 mb-2 sm:mb-3" />
+          <h1
+            className="text-xl sm:text-2xl md:text-3xl font-black tracking-wide uppercase mb-2 sm:mb-3"
+            style={{ fontSize: "clamp(1.25rem, 3vw, 1.875rem)" }}
+          >
+            {lesson.title}
+          </h1>
+          <p
+            className="text-xs sm:text-sm mb-2 sm:mb-3 max-w-md sm:max-w-lg"
+            style={{ fontSize: "clamp(0.75rem, 2vw, 0.875rem)" }}
+          >
+            {lesson.description}
+          </p>
+          <div className="flex flex-wrap gap-1 sm:gap-2 mb-2 sm:mb-3">
+            <div className="inline-block border-2 border-black dark:border-white px-2 py-0.5 font-bold text-xs sm:text-sm uppercase rounded">
+              Durée : {lesson.duration}
+            </div>
+            <div className="inline-block border-2 border-black dark:border-white px-2 py-0.5 font-bold text-xs sm:text-sm uppercase rounded">
+              Cours : {course.title}
+            </div>
+          </div>
+        </header>
       </section>
 
       {/* Contenu Markdown */}
-      <section className="max-w-4xl mx-auto mb-12">
-        <Card className="bg-content1 dark:bg-content1-dark border border-border rounded-xl">
-          <CardBody className="p-6 prose dark:prose-invert max-w-none">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              rehypePlugins={[rehypeRaw, rehypeHighlight]}
-            >
-              {unescapeBackticks(dedent(lesson.content))}
-            </ReactMarkdown>
-          </CardBody>
-        </Card>
+      <section className="mb-6 sm:mb-8">
+        <div className="h-0.5 sm:h-1 bg-red-600 w-8 sm:w-12 mb-2 sm:mb-3" />
+        <div className="prose prose-neutral dark:prose-invert max-w-none leading-relaxed">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeRaw, rehypeHighlight]}
+          >
+            {unescapeBackticks(dedent(lesson.content))}
+          </ReactMarkdown>
+        </div>
       </section>
 
-      {/* Exercice */}
+      {/* Exercise */}
       {lesson.exercise && (
-        <section className="max-w-4xl mx-auto mb-12">
+        <section className="mb-6 sm:mb-8">
+          <div className="h-0.5 sm:h-1 bg-red-600 w-8 sm:w-12 mb-2 sm:mb-3" />
           <ExerciseInteractive
-            starterCode={lesson.exercise.starterCode ?? ""}
-            solutionCode={lesson.exercise.solutionCode ?? ""}
-            description={lesson.exercise.description}
+            prompt={lesson.exercise.prompt}
+            solution={lesson.exercise.solution}
             validate={validateFn ?? undefined}
             onValidateSuccess={() => setExerciseCompleted(true)}
           />
@@ -198,129 +216,164 @@ export default function ClientLessonContent({ course, lesson }: Props) {
 
       {/* Quiz */}
       {lesson.quizzes && lesson.quizzes.length > 0 && (
-        <section className="max-w-4xl mx-auto mb-12">
-          <h2 className="text-2xl font-bold mb-4 dark:text-white">Quiz</h2>
-          <Card className="bg-content1 dark:bg-content1-dark border border-border rounded-xl">
-            <CardBody className="p-6">
-              {lesson.quizzes.map((q, index) => {
-                const userAnswer = answers[index];
-                const isAnswered = userAnswer !== undefined;
-                const isCorrect = userAnswer === q.correctAnswer;
-
-                return (
-                  <div key={`quiz-${index}`} className="mb-6">
-                    <p className="text-lg font-semibold dark:text-white flex items-center gap-2">
-                      {index + 1}. {q.question}
-                      {isAnswered && (
-                        <span
-                          className={`ml-2 ${isCorrect ? "text-green-600" : "text-red-600"}`}
-                          aria-label={isCorrect ? "Correct" : "Incorrect"}
-                          title={isCorrect ? "Correct" : "Incorrect"}
-                        >
-                          {isCorrect ? "✔️" : "❌"}
-                        </span>
-                      )}
-                    </p>
-                    <ul className="space-y-2 mt-2">
-                      {q.options.map((option, optIndex) => (
-                        <li key={`option-${index}-${optIndex}`}>
-                          <label
-                            className={`flex items-center gap-2 cursor-pointer ${
-                              isAnswered
-                                ? optIndex === q.correctAnswer
-                                  ? "text-green-600 font-semibold"
-                                  : optIndex === userAnswer
-                                    ? "text-red-600 line-through"
-                                    : ""
-                                : ""
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              name={`quiz-${index}`}
-                              className="text-red-600 focus:ring-red-600"
-                              onChange={() => handleAnswer(index, optIndex)}
-                              checked={answers[index] === optIndex}
-                              disabled={isAnswered}
-                            />
-                            <span>{option}</span>
-                          </label>
-                        </li>
-                      ))}
-                    </ul>
+        <motion.section
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.3 }}
+          className="mb-6 sm:mb-8"
+        >
+          <div className="h-0.5 sm:h-1 bg-red-600 w-8 sm:w-12 mb-2 sm:mb-3" />
+          <h2
+            className="text-base sm:text-lg font-black uppercase tracking-wide text-neutral-900 dark:text-neutral-100 mb-2 sm:mb-3"
+            style={{ fontSize: "clamp(0.875rem, 2vw, 1rem)" }}
+          >
+            QUIZ • {lesson.quizzes.length} QUESTION
+            {lesson.quizzes.length > 1 ? "S" : ""}
+          </h2>
+          <div className="grid grid-cols-1 gap-2 sm:gap-4">
+            {lesson.quizzes.map((q, idx) => {
+              const userAnswer = answers[idx];
+              const isAnswered = userAnswer !== undefined;
+              const isCorrect = userAnswer === q.correctAnswer;
+              return (
+                <div key={idx}>
+                  <div className="relative flex items-center gap-1 sm:gap-2 my-2 sm:my-3 bg-red-600 text-white border-2 border-black dark:border-white p-1.5 sm:p-2 rounded">
+                    <span className="w-4 h-4 flex items-center justify-center bg-red-600 text-white font-black border-2 border-black dark:border-white text-xs">
+                      {idx + 1}
+                    </span>
+                    <span
+                      className="text-sm sm:text-base font-black tracking-wide"
+                      style={{ fontSize: "clamp(0.75rem, 2vw, 0.875rem)" }}
+                    >
+                      {q.question}
+                    </span>
+                    {isAnswered && (
+                      <span className="absolute top-1 sm:top-2 right-2 font-black text-xs sm:text-sm text-white">
+                        {isCorrect ? "✓" : "✗"}
+                      </span>
+                    )}
                   </div>
-                );
-              })}
-            </CardBody>
-          </Card>
-        </section>
-      )}
-
-      {/* Affichage nombre erreurs et barre progression */}
-      {showScore && (
-        <div className="mt-6  max-w-4xl mx-auto">
-          <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-4">
-            <div
-              className="bg-green-600 h-4 rounded-full transition-all"
-              style={{
-                width: `${
-                  lesson.quizzes
-                    ? (answers.filter((a) => a !== undefined).length /
-                        lesson.quizzes.length) *
-                      100
-                    : 0
-                }%`,
-              }}
-            />
+                  <div className="h-0.5 sm:h-1 bg-red-600 mb-1 sm:mb-2" />
+                  <ul className="space-y-1">
+                    {q.options.map((opt, oIdx) => (
+                      <li key={oIdx}>
+                        <label
+                          className={`flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 bg-white dark:bg-neutral-950 border-2 ${
+                            !isAnswered
+                              ? "border-black dark:border-white cursor-pointer transition-transform duration-200 hover:-translate-y-0.5"
+                              : oIdx === q.correctAnswer
+                                ? "border-red-600"
+                                : oIdx === userAnswer
+                                  ? "border-black dark:border-white opacity-50 line-through"
+                                  : "border-black dark:border-white"
+                          } rounded`}
+                        >
+                          <input
+                            type="radio"
+                            name={`quiz-${idx}`}
+                            onChange={() => handleAnswer(idx, oIdx)}
+                            checked={userAnswer === oIdx}
+                            disabled={isAnswered}
+                            className="w-2.5 h-2.5 accent-red-600"
+                            aria-label={`Option ${oIdx + 1}: ${opt}`}
+                          />
+                          <span
+                            className="text-xs sm:text-sm font-bold text-neutral-900 dark:text-neutral-100"
+                            style={{
+                              fontSize: "clamp(0.625rem, 1.5vw, 0.75rem)",
+                            }}
+                          >
+                            {opt}
+                          </span>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
           </div>
-        </div>
+        </motion.section>
       )}
 
-      {/* Bouton Valider */}
-      <div className="max-w-4xl mx-auto flex justify-center">
-        <Button
-          disabled={answers.some((a) => a === undefined)}
-          className={`mt-4 font-bold tracking-wide px-8 py-3 rounded-xl shadow-lg transition-all duration-300 ${
-            answers.some((a) => a === undefined)
-              ? "bg-gray-400 cursor-not-allowed text-gray-800"
-              : "bg-black text-white hover:bg-zinc-900 active:scale-95"
-          }`}
-          onClick={handleValidateQuiz}
+      {/* Valider Quiz */}
+      {!allQuizCorrect && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.3 }}
+          className="flex justify-center mb-6 sm:mb-8"
         >
-          ✅ Valider le quiz
-        </Button>
-      </div>
+          <button
+            disabled={!allQuizAnswered}
+            onClick={handleValidateQuiz}
+            className={`px-3 py-1.5 font-black text-xs sm:text-sm border-2 uppercase tracking-wide rounded ${
+              !allQuizAnswered
+                ? "border-black dark:border-white opacity-50 cursor-not-allowed"
+                : "border-red-600 bg-red-600 text-white transition-transform duration-200 hover:-translate-y-0.5"
+            }`}
+            aria-label="Valider le quiz"
+          >
+            Valider
+          </button>
+        </motion.div>
+      )}
 
+      {/* Score */}
       {showScore && lesson.quizzes && (
-        <div
-          className="mt-4 p-4 max-w-4xl mx-auto bg-green-600 text-white rounded-lg font-semibold text-center"
-          role="alert"
-          aria-live="polite"
+        <motion.section
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.3 }}
+          className="border-2 border-black dark:border-white p-2 sm:p-3 mb-6 sm:mb-8 text-center rounded"
         >
-          🎉 Votre score est {score} / {lesson.quizzes.length} !
-        </div>
+          <Separator />
+          <div className="h-0.5 sm:h-1 bg-red-600 w-8 sm:w-12 mx-auto mb-2 sm:mb-3" />
+          <h3
+            className="text-base sm:text-lg font-black uppercase mb-1 sm:mb-2"
+            style={{ fontSize: "clamp(0.875rem, 2vw, 1rem)" }}
+          >
+            🎉 Quiz terminé !
+          </h3>
+          <p
+            className="text-xs sm:text-sm font-bold"
+            style={{ fontSize: "clamp(0.625rem, 1.5vw, 0.75rem)" }}
+          >
+            Score : {score} / {lesson.quizzes.length}
+          </p>
+        </motion.section>
       )}
 
-      {/* Bouton Leçon suivante ou Résumé */}
-      <section className="max-w-4xl mx-auto mt-12 flex justify-end gap-4">
-        {canProceed && nextLesson ? (
-          <Button
-            as={NextLink}
+      {/* Bouton Leçon suivante / Résumé */}
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.3 }}
+        className="flex justify-end gap-1 sm:gap-2 mb-6 sm:mb-8"
+      >
+        {canProceed && nextLesson && (
+          <NextLink
             href={`/courses/${course.slug}/lessons/${nextLesson.slug}`}
-            className="bg-black text-white font-semibold shadow-md hover:bg-gray-950 transition duration-300 transform hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-100"
+            className="px-3 py-1.5 border-2 border-red-600 bg-red-600 text-white font-black text-xs sm:text-sm uppercase transition-transform duration-200 hover:-translate-y-0.5 rounded"
+            aria-label={`Aller à la leçon suivante : ${nextLesson.title}`}
           >
-            Leçon suivante : {nextLesson.title}
-          </Button>
-        ) : canProceed && !nextLesson ? (
-          <Button
-            as={NextLink}
+            Suivante
+          </NextLink>
+        )}
+        {canProceed && !nextLesson && (
+          <NextLink
             href={`/courses/${course.slug}/summary`}
-            className="bg-blue-600 text-white font-semibold shadow-md hover:bg-blue-700 transition duration-300 transform hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-100"
+            className="px-3 py-1.5 border-2 border-red-600 bg-red-600 text-white font-black text-xs sm:text-sm uppercase transition-transform duration-200 hover:-translate-y-0.5 rounded"
+            aria-label="Voir le résumé du cours"
           >
-            Voir le résumé / résultats
-          </Button>
-        ) : null}
-      </section>
+            Résumé
+          </NextLink>
+        )}
+      </motion.section>
     </div>
   );
 }

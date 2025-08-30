@@ -1,0 +1,38 @@
+
+Crée un design dans le style "Neo-Brutalism" avec ces caractéristiques :
+
+PALETTE DE COULEURS :
+- Fond : blanc pur (light) / noir pur (dark)
+- Texte : noir pur (light) / blanc pur (dark) 
+- Accent : rouge (#dc2626) UNIQUEMENT pour les éléments importants/primaires
+- INTERDICTION de gris - seulement noir/blanc/rouge
+
+TYPOGRAPHIE :
+- Font-weight : font-black (900) pour les titres
+- Font-weight : font-bold (700) pour les sous-titres
+- Majuscules avec tracking-wide pour les titres
+- Tailles : text-5xl+ pour les gros titres, text-2xl pour les sections
+
+FORMES & LAYOUT :
+- Bordures : border-2 partout, jamais de rounded (sauf cercles parfaits)
+- Cartes : fond blanc/noir avec bordure noire/blanche épaisse
+- Espacement généreux : p-8, gap-6+, mb-12+
+- Grid layouts stricts
+
+INTERACTIONS :
+- Hover : légers déplacements (translate-x, translate-y)
+- Transitions rapides (duration-200)
+- Pas d'ombres compliquées, juste des overlays opacity-5
+- Scale subtil (1.02 max)
+
+ACCENTS ROUGES :
+- Seulement pour les CTA primaires et indicateurs importants
+- Lignes d'accent (h-1) en haut des cartes importantes
+- Boutons primaires : bg-red-600
+
+ANIMATIONS :
+- Entrance : fade + translate simple
+- Micro-interactions : déplacements de quelques pixels
+- Pas d'animations complexes ou colorées
+
+Applique ce style en gardant l'aspect brutal, minimaliste et moderne tout en gardant les vrais donnees .

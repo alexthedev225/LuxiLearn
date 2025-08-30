@@ -2,11 +2,9 @@
 import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
 import clsx from "clsx";
-import { Providers } from "./providers";
-import { HighlightThemeLoader } from "./HighlightThemeLoader";
+import { HighlightThemeLoader } from "./HighlightThemeLoader"; // utile pour Prism/Highlight.js
 import { fontSans } from "@/config/fonts";
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
+import LayoutWrapper from "./LayoutWrapper";
 
 export const metadata: Metadata = {
   title: {
@@ -77,27 +75,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html suppressHydrationWarning lang="fr">
+    <html lang="fr">
+      <head>
+        {/* Thème de coloration syntaxique */}
+        {/* <HighlightThemeLoader /> */}
+      </head>
       <body
         className={clsx(
-          "min-h-screen bg-background text-foreground font-sans antialiased transition-colors duration-300",
+          "min-h-screen font-sans antialiased transition-colors duration-300 bg-white dark:bg-black",
           fontSans.variable
         )}
       >
-        <Providers themeProps={{ attribute: "class", defaultTheme: "light" }}>
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main
-              className="flex-grow"
-              role="main"
-              aria-label="Contenu principal de LuxiLearn"
-            >
-              {children}
-              <HighlightThemeLoader />
-            </main>
-            <Footer />
-          </div>
-        </Providers>
+        <LayoutWrapper>{children}</LayoutWrapper>
       </body>
     </html>
   );

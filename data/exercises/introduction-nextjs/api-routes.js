@@ -1,70 +1,154 @@
 export default {
-  description: "Créer une API Route qui renvoie une liste de produits.",
-  starterCode: `
-// app/api/products/route.js
-import { NextResponse } from "next/server";
+  title: `
+Créer une API Route complète avec Next.js 15 (Route Handler) pour gérer une liste de produits.
 
-export async function GET() {
-  return NextResponse.json([]);
-}
-  `,
-  solutionCode: `
-// app/api/products/route.js
-import { NextResponse } from "next/server";
+L'API doit :
+- Supporter la méthode GET qui retourne tous les produits (JSON)
+- Supporter la méthode POST qui ajoute un nouveau produit (avec validation simple)
+- Gérer les erreurs avec des réponses HTTP appropriées (400, 500)
+- Utiliser la signature correcte avec \`NextRequest\` et \`NextResponse\`
+- Respecter les bonnes pratiques de code async/await
+- Stocker les produits dans une variable interne mutable simulant une base de données (en mémoire)
+`,
 
-const products = [
+  prompt: `
+// app/api/products/route.ts
+import { NextResponse, type NextRequest } from "next/server";
+
+// Variable mutable simulant une base de données en mémoire
+let products = [
   { id: 1, name: "Produit A", price: 29.99 },
   { id: 2, name: "Produit B", price: 49.99 },
 ];
 
-export async function GET() {
-  return NextResponse.json(products);
+export async function GET(request: NextRequest) {
+  // TODO: Retourner tous les produits au format JSON
+}
+
+export async function POST(request: NextRequest) {
+  // TODO: Ajouter un nouveau produit avec validation des données
 }
   `,
-  validate: (code) => {
-    const normalized = code.replace(/\s+/g, " ").toLowerCase();
 
-    // 1. Vérifie que la fonction GET est async
-    if (!/export async function get\s*\(\s*\)/.test(normalized)) {
-      return {
-        success: false,
-        message: "La fonction GET doit être exportée et déclarée async.",
-      };
+  solution: `
+// app/api/products/route.ts
+import { NextResponse, type NextRequest } from "next/server";
+
+// Variable mutable simulant une base de données en mémoire
+let products = [
+  { id: 1, name: "Produit A", price: 29.99 },
+  { id: 2, name: "Produit B", price: 49.99 },
+];
+
+export async function GET(request: NextRequest) {
+  return NextResponse.json(products);
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { name, price } = body;
+
+    if (!name || typeof name !== "string") {
+      return NextResponse.json({ error: "Le champ 'name' est obligatoire et doit être une chaîne." }, { status: 400 });
     }
 
-    // 2. Vérifie qu'on appelle bien NextResponse.json avec un argument
-    const jsonCallMatch = normalized.match(/nextresponse\.json\s*\((.+?)\)/);
-    if (!jsonCallMatch) {
-      return {
-        success: false,
-        message: "Tu dois retourner la réponse avec `NextResponse.json(...)`.",
-      };
-    }
-    const responseArg = jsonCallMatch[1].trim();
-
-    // 3. Vérifie que responseArg correspond à une variable tableau déclarée
-    const arrayDeclarationRegex = new RegExp(
-      `(const|let|var)\\s+${responseArg}\\s*=\\s*\\[.*?\\]`,
-      "s"
-    );
-    if (!arrayDeclarationRegex.test(code)) {
-      return {
-        success: false,
-        message: `La variable '${responseArg}' doit être un tableau déclaré.`,
-      };
+    if (price === undefined || typeof price !== "number") {
+      return NextResponse.json({ error: "Le champ 'price' est obligatoire et doit être un nombre." }, { status: 400 });
     }
 
-    // 4. Vérifie que le tableau contient au moins un objet avec id, name et price
-    const objectFieldsRegex =
-      /\{\s*[^}]*id\s*:\s*[\w\d]+[^}]*name\s*:\s*['"][^'"]+['"][^}]*price\s*:\s*\d+(\.\d+)?[^}]*\}/;
-    if (!objectFieldsRegex.test(code)) {
-      return {
-        success: false,
-        message:
-          "Le tableau doit contenir au moins un objet avec les clés `id`, `name` et `price`.",
-      };
-    }
+    const newProduct = { id: Date.now(), name, price };
+    products = [...products, newProduct];
 
-    return { success: true };
-  },
+    return NextResponse.json(newProduct, { status: 201 });
+  } catch (error) {
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
+}
+  `,
+
+  validateCode: `
+(code) => {
+  const normalized = code.replace(/\\s+/g, " ").toLowerCase();
+
+  if (!/export async function get\\s*\\(\\s*[\\w\\d]+\\s*\\)/.test(normalized)) {
+    return {
+      success: false,
+      message:
+        "La fonction GET doit être exportée, async, et recevoir un paramètre (request).",
+    };
+  }
+
+  if (!/export async function post\\s*\\(\\s*[\\w\\d]+\\s*\\)/.test(normalized)) {
+    return {
+      success: false,
+      message:
+        "La fonction POST doit être exportée, async, et recevoir un paramètre (request).",
+    };
+  }
+
+  if (!/try\\s*{/.test(code) || !/catch\\s*\\(.*?\\)/.test(code)) {
+    return {
+      success: false,
+      message:
+        "La fonction POST doit gérer les erreurs avec un bloc try/catch.",
+    };
+  }
+
+  if (!/if\\s*\\([^)]*name[^)]*\\)/.test(normalized)) {
+    return {
+      success: false,
+      message: "La fonction POST doit valider la présence du champ 'name'.",
+    };
+  }
+
+  if (!/if\\s*\\([^)]*price[^)]*\\)/.test(normalized)) {
+    return {
+      success: false,
+      message: "La fonction POST doit valider la présence du champ 'price'.",
+    };
+  }
+
+  if (!/let\\s+products\\s*=\\s*\\[/.test(code)) {
+    return {
+      success: false,
+      message: "La variable 'products' doit être déclarée avec 'let'.",
+    };
+  }
+
+  if (!/products\\s*=\\s*\\[/.test(code)) {
+    return {
+      success: false,
+      message:
+        "La fonction POST doit modifier la variable 'products' (simulant la base de données).",
+    };
+  }
+
+  if (
+    !/export async function get[\\s\\S]*?nextresponse\\.json\\s*\\(/.test(
+      normalized
+    )
+  ) {
+    return {
+      success: false,
+      message:
+        "La fonction GET doit retourner une réponse JSON avec NextResponse.json(...).",
+    };
+  }
+
+  if (
+    !/export async function post[\\s\\S]*?nextresponse\\.json\\s*\\(/.test(
+      normalized
+    )
+  ) {
+    return {
+      success: false,
+      message:
+        "La fonction POST doit retourner une réponse JSON avec NextResponse.json(...).",
+    };
+  }
+
+  return { success: true };
+}
+`,
 };

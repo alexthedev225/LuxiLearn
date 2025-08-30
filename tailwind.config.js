@@ -15,8 +15,28 @@ const config = {
       },
     },
   },
-  darkMode: "class",
+  darkMode: "media",
   plugins: [heroui(), require("@tailwindcss/typography")],
+  daisyui: {
+    themes: [
+      {
+        mytheme: {
+          primary: "#570df8",
+          secondary: "#f000b8",
+          accent: "#37cdbe",
+          neutral: "#3d4451",
+          "base-100": "#ffffff",
+          info: "#2094f3",
+          success: "#009485",
+          warning: "#ff9900",
+          // ici tu personnalises ta couleur danger (danger = error dans daisyui)
+          error: "#b91c1c", // rouge sombre (tailwind red-700)
+          "error-focus": "#7f1d1d", // rouge foncé pour focus
+          "error-content": "#ffffff", // texte sur bouton danger
+        },
+      },
+    ],
+  },
 };
 
 module.exports = config;

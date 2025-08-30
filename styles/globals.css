@@ -1,39 +1,65 @@
-
 @import "tailwindcss";
-/* Classes pour les blocs de code dans le markdown */
-
-/* Styles communs */
-.code-editor {
-  /* Le fond et le texte seront gérés via les fichiers CSS chargés dynamiquement (atom-one-dark, etc) */
-  padding: 1rem;
-  border-radius: 0.5rem;
-  overflow-x: auto;
-  font-family: 'Fira Code', monospace;
-  font-size: 1rem;
-  /* Si besoin tu peux ajouter une bordure claire/sombre */
-  border: 1px solid transparent;
-  margin-bottom: 1rem;
+@plugin "daisyui";
+/* Thème clair */
+/* === Thème 2 : GitHub Light (clair) / GitHub Dark (sombre) === */
+/* Thème clair VS Code */
+@import "highlight.js/styles/atom-one-light.css";
+/* Thème sombre GitHub */
+@media (prefers-color-scheme: dark) {
+  @import "highlight.js/styles/atom-one-dark.css";
 }
+
+/* Désactive toutes les transitions globales lors du changement de thème */
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition: none !important;
+}
+
+
+.prose pre {
+ padding: 0;
+  background-color: rgba(0, 0, 0, 0.05); /* Blanc brutaliste */
+}
+
+.dark .prose pre {
+  border-color: #fff;
+  background-color: #111;
+  box-shadow: 4px 4px 0 #fff;
+}
+
+.prose pre code {
+  font-family: "Fira Code", monospace;
+  border: 2px solid rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+   
+}
+.dark .prose pre code {
+  font-family: "Fira Code", monospace;
+  padding: 1rem;
+}
+
+/* Code inline : `...` */
+.prose :not(pre) > code {
+  color: inherit;
+  padding: 0.2rem 0.4rem;
+  border-radius: none;
+  font-family: "Fira Code", monospace;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dark .prose :not(pre) > code {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #fefefe;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Si tu utilises rehype-highlight, la classe hljs est ajoutée au <code> ou <pre> */
+/* Tu peux aussi forcer un style plus léger pour hljs */
+
+
 
 /* Optionnel : un style de bordure ou ombre différent pour la zone terminal */
-.terminal {
-  padding: 1rem;
-  border-radius: 0.5rem;
-  overflow-x: auto;
-  font-family: 'Fira Code', monospace;
-  font-size: 1rem;
-  border: 1px solid #e53e3e; /* Rouge léger pour bien différencier */
-  background-color: #1e1e1e; /* Foncé par défaut (mais ça sera override par les feuilles atom-one-dark) */
-  color: #f87171;
-  margin-bottom: 1rem;
-}
-
-/* Pour que le style highlight.js fonctionne bien */
-.hljs {
-  /* Pas besoin de background ici car tu charges les CSS via HighlightThemeLoader */
-  font-family: inherit;
-  font-size: inherit;
-}
 
 
-@config "../tailwind.config.js"
+@config "../tailwind.config.js";

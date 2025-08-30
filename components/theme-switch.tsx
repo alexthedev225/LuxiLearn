@@ -22,7 +22,18 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
   const isSSR = useIsSSR();
 
   const onChange = () => {
+    const html = document.documentElement;
+
+    // Ajoute une classe temporaire qui bloque les transitions
+    html.classList.add("theme-transition");
+
+    // Change le thème
     theme === "light" ? setTheme("dark") : setTheme("light");
+
+    // Supprime la classe après un petit délai
+    setTimeout(() => {
+      html.classList.remove("theme-transition");
+    }, 0);
   };
 
   const {
@@ -41,11 +52,7 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
   return (
     <Component
       {...getBaseProps({
-        className: clsx(
-          "px-px transition-opacity hover:opacity-80 cursor-pointer",
-          className,
-          classNames?.base,
-        ),
+        className: clsx(className, classNames?.base),
       })}
     >
       <VisuallyHidden>
@@ -66,7 +73,7 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
               "px-0",
               "mx-0",
             ],
-            classNames?.wrapper,
+            classNames?.wrapper
           ),
         })}
       >

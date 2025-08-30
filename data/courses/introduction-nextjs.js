@@ -114,6 +114,66 @@ async function buildIntroductionNextjs() {
         exercise: exercises["api-routes"],
         quiz: quizzes["api-routes"],
       },
+      {
+        title: "Introduction aux Server Components",
+        slug: "server-components",
+        description:
+          "Découvrir les Server Components, leur rôle dans l'App Router, et leur intégration avec les Client Components.",
+        duration: "45 minutes",
+        content: readMarkdown("server-components"),
+        exercise: exercises["server-components"],
+        quiz: quizzes["server-components"],
+      },
+      {
+        title: "Génération statique (SSG) et ISR avec App Router",
+        slug: "ssg-isr",
+        description:
+          "Utiliser la génération statique (SSG) et la régénération statique incrémentale (ISR) pour des pages rapides.",
+        duration: "40 minutes",
+        content: readMarkdown("ssg-isr"),
+        exercise: exercises["ssg-isr"],
+        quiz: quizzes["ssg-isr"],
+      },
+      {
+        title: "Gestion des métadonnées pour le SEO",
+        slug: "metadata-seo",
+        description:
+          "Configurer les métadonnées statiques et dynamiques pour optimiser le SEO.",
+        duration: "30 minutes",
+        content: readMarkdown("metadata-seo"),
+        exercise: exercises["metadata-seo"],
+        quiz: quizzes["metadata-seo"],
+      },
+      {
+        title: "Optimisation des images et polices",
+        slug: "image-font-optimization",
+        description:
+          "Utiliser next/image et next/font pour optimiser les performances des ressources.",
+        duration: "30 minutes",
+        content: readMarkdown("image-font-optimization"),
+        exercise: exercises["image-font-optimization"],
+        quiz: quizzes["image-font-optimization"],
+      },
+      {
+        title: "Introduction aux Server Actions",
+        slug: "server-actions",
+        description:
+          "Créer des Server Actions pour gérer les mutations côté serveur sans API publique.",
+        duration: "35 minutes",
+        content: readMarkdown("server-actions"),
+        exercise: exercises["server-actions"],
+        quiz: quizzes["server-actions"],
+      },
+      {
+        title: "Déploiement et optimisation des performances",
+        slug: "deployment-performance",
+        description:
+          "Déployer une application Next.js sur Vercel et mesurer ses performances avec Lighthouse.",
+        duration: "30 minutes",
+        content: readMarkdown("deployment-performance"),
+        exercise: exercises["deployment-performance"],
+        quiz: quizzes["deployment-performance"],
+      },
     ],
   };
 }

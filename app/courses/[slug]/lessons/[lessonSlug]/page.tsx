@@ -1,5 +1,5 @@
 // LessonPage.tsx (serveur)
-import {  Course, Lesson } from "./types";
+import { Course, Lesson } from "./types";
 import ClientLessonContent from "./ClientLessonContent";
 
 // Fonction de récupération des données de la leçon (serveur)
@@ -8,7 +8,8 @@ async function fetchLesson(
 ): Promise<{ course: Course; lesson: Lesson }> {
   const { slug, lessonSlug } = await params;
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/api/courses/${slug}/lessons/${lessonSlug}`
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/courses/${slug}/lessons/${lessonSlug}`,
+    
   );
 
   if (!res.ok) {
@@ -27,7 +28,7 @@ export default async function LessonPage({
   const { course, lesson } = await fetchLesson(params);
 
   return (
-    <div className="min-h-screen bg-background text-foreground dark:bg-background-dark dark:text-foreground-dark py-20 px-6">
+    <div className="min-h-screen   ">
       <ClientLessonContent course={course} lesson={lesson} />
     </div>
   );

@@ -21,7 +21,8 @@
     ],
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "typeRoots": ["types", "node_modules/@types"]
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "data/courses.js", "data/courses/introduction-nextjs.js"],
   "exclude": ["node_modules"]

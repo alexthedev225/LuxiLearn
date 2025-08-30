@@ -25,7 +25,6 @@ export async function GET(
       technologies: true,
       slug: true,
       duration: true,
-      image: true,
       lessons: {
         select: {
           id: true,
@@ -33,7 +32,7 @@ export async function GET(
           description: true,
           duration: true,
           slug: true,
-          // on peut enlever content/exercise/quizzes ici pour alléger la réponse
+          // content/exercise/quizzes ici enlevés pour alléger la réponse
         },
         orderBy: { id: "asc" },
       },
@@ -62,9 +61,10 @@ export async function GET(
       content: true,
       exercise: {
         select: {
-          description: true,
-          starterCode: true,
-          solutionCode: true,
+          title: true,
+          prompt: true,
+          solution: true,
+          validateCode: true,
         },
       },
       quizzes: {

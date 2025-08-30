@@ -3,99 +3,92 @@
 import { useState, useEffect, useRef } from "react";
 import MonacoEditor, { OnMount } from "@monaco-editor/react";
 import type * as monaco from "monaco-editor";
-import { Button } from "@heroui/button";
-import { Card, CardBody } from "@heroui/card";
 import { useTheme } from "next-themes";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
+
 type ValidationResult = true | string | { success: boolean; message?: string };
 
 export default function ExerciseInteractive({
-  starterCode,
-  solutionCode,
-  description,
-  onValidateSuccess, // 👈 AJOUTE CETTE LIGNE
-  // tu peux garder validate en option locale si tu veux fallback
+  prompt,
+  solution,
+  title,
+  onValidateSuccess,
   validate,
 }: {
-  starterCode: string;
-  solutionCode: string;
-  description: string;
+  prompt: string;
+  solution: string;
+  title: string;
   validate?: (args: { code: string }) => ValidationResult;
-  onValidateSuccess?: () => void; // 👈 ajoute ça
+  onValidateSuccess?: () => void;
 }) {
-  const [code, setCode] = useState(starterCode);
+  const [code, setCode] = useState(prompt);
   const [validationMessage, setValidationMessage] = useState("");
   const [validationSuccess, setValidationSuccess] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
   const [decorations, setDecorations] = useState<string[]>([]);
   const { theme, resolvedTheme } = useTheme();
-
   const isDark = theme === "dark" || resolvedTheme === "dark";
-
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
   useEffect(() => {
-    setCode(starterCode);
+    setCode(prompt);
     setValidationMessage("");
     setValidationSuccess(false);
     setShowSolution(false);
-  }, [starterCode]);
+  }, [prompt]);
 
   const normalizeCode = (code: string): string =>
     code.replace(/\s+/g, " ").trim().toLowerCase();
 
   const handleValidate = () => {
     if (!validate) {
-      // Validation simple si pas de validate fourni
       const normalizedUserCode = normalizeCode(code);
-      const normalizedSolution = normalizeCode(solutionCode);
+      const normalizedSolution = normalizeCode(solution);
 
       if (normalizedUserCode === normalizedSolution) {
         setValidationSuccess(true);
-        setValidationMessage("✅ Bravo ! Votre solution est correcte 🎉");
+        setValidationMessage("✅ CORRECT");
         setShowSolution(false);
-        onValidateSuccess?.(); // 👈 AJOUTE CETTE LIGNE
+        onValidateSuccess?.();
       } else {
         setValidationSuccess(false);
-        setValidationMessage("❌ Solution incorrecte. Essayez encore !");
+        setValidationMessage("❌ INCORRECT");
       }
       return;
     }
 
     try {
-      const result = validate({ code });
+      const result = validate(code);
 
       if (
         result === true ||
         (result && typeof result === "object" && result.success)
       ) {
         setValidationSuccess(true);
-        setValidationMessage("✅ Bravo ! Votre solution est correcte 🎉");
+        setValidationMessage("✅ CORRECT");
         setShowSolution(false);
-        onValidateSuccess?.(); // 👈 AJOUTE CETTE LIGNE
+        onValidateSuccess?.();
       } else if (typeof result === "string") {
         setValidationSuccess(false);
         setValidationMessage("❌ " + result);
       } else if (result && typeof result === "object" && !result.success) {
         setValidationSuccess(false);
-        setValidationMessage(
-          "❌ " + (result.message || "Solution incorrecte.")
-        );
+        setValidationMessage("❌ " + (result.message || "INCORRECT"));
       } else {
         setValidationSuccess(false);
-        setValidationMessage("❌ Solution incorrecte. Essayez encore !");
+        setValidationMessage("❌ INCORRECT");
       }
     } catch (error) {
       setValidationSuccess(false);
-      setValidationMessage("❌ Une erreur est survenue pendant la validation.");
+      setValidationMessage("❌ ERREUR");
       console.error(error);
     }
   };
 
   const handleReset = () => {
-    setCode(starterCode);
+    setCode(prompt);
     setValidationMessage("");
     setValidationSuccess(false);
     setShowSolution(false);
@@ -103,7 +96,6 @@ export default function ExerciseInteractive({
 
   const handleEditorDidMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
-
     monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
       jsx: monaco.languages.typescript.JsxEmit.React,
       target: monaco.languages.typescript.ScriptTarget.ESNext,
@@ -135,15 +127,13 @@ export default function ExerciseInteractive({
     const solutionLines = solution.split("\n");
     const maxLines = Math.max(starterLines.length, solutionLines.length);
     const diffLines: number[] = [];
-
     for (let i = 0; i < maxLines; i++) {
-      const starterLine = starterLines[i]?.trim() ?? "";
-      const solutionLine = solutionLines[i]?.trim() ?? "";
-      if (starterLine !== solutionLine) {
+      if (
+        (starterLines[i]?.trim() ?? "") !== (solutionLines[i]?.trim() ?? "")
+      ) {
         diffLines.push(i + 1);
       }
     }
-
     return diffLines;
   }
 
@@ -164,140 +154,110 @@ export default function ExerciseInteractive({
         },
       })),
     ]);
-
     setDecorations(newDecorations);
   };
 
   useEffect(() => {
     if (showSolution) {
-      const linesToHighlight = findAllDiffLines(starterCode, solutionCode);
+      const linesToHighlight = findAllDiffLines(prompt, solution);
       highlightSolutionLines(linesToHighlight);
-    } else {
-      if (editorRef.current) {
-        editorRef.current.deltaDecorations(decorations, []);
-        setDecorations([]);
-      }
+    } else if (editorRef.current) {
+      editorRef.current.deltaDecorations(decorations, []);
+      setDecorations([]);
     }
-  }, [showSolution, starterCode, solutionCode]);
+  }, [showSolution, prompt, solution]);
 
   return (
-    <section className="max-w-4xl mx-auto mb-12">
-      <h2 className="text-2xl font-bold mb-4 dark:text-white">Exercice</h2>
-      <Card className="bg-content1 dark:bg-content1-dark border border-border rounded-xl">
-        <CardBody className="p-6">
-          <p className="text-foreground/95 dark:text-foreground-dark/95 mb-4">
-            {description}
+    <section className="mb-8 bg-white dark:bg-black">
+      <div className="relative">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-1 h-6 bg-red-600" />
+          <h2 className="text-2xl font-black uppercase tracking-wide text-black dark:text-white">
+            EXERCICE INTERACTIF
+          </h2>
+        </div>
+
+        <div className="space-y-4">
+          <p className="text-base font-bold text-black dark:text-white">
+            {title}
           </p>
 
-          <MonacoEditor
-            height="300px"
-            defaultLanguage="javascript"
-            language="javascript"
-            path="file.jsx"
-            value={code}
-            onChange={(value) => setCode(value ?? "")}
-            onMount={handleEditorDidMount}
-            theme={isDark ? "vs-dark" : "vs"}
-            options={{
-              minimap: { enabled: false },
-              fontSize: 14,
-              wordWrap: "on",
-              automaticLayout: true,
-              suggestOnTriggerCharacters: true,
-              quickSuggestions: { other: true, comments: true, strings: true },
-              acceptSuggestionOnCommitCharacter: true,
-              acceptSuggestionOnEnter: "on",
-              autoClosingBrackets: "always",
-              autoClosingQuotes: "always",
-              tabCompletion: "on",
-              formatOnType: true,
-              formatOnPaste: true,
-            }}
-          />
+          <div className="relative group border-2 border-black dark:border-white p-1.5 transition-all duration-200 hover:border-red-600">
+            <MonacoEditor
+              height="240px"
+              defaultLanguage="javascript"
+              language="javascript"
+              value={code}
+              onChange={(value) => setCode(value ?? "")}
+              onMount={handleEditorDidMount}
+              theme={isDark ? "vs-dark" : "vs"}
+              options={{
+                minimap: { enabled: false },
+                fontSize: 12,
+                wordWrap: "on",
+                automaticLayout: true,
+                suggestOnTriggerCharacters: true,
+                quickSuggestions: true,
+                acceptSuggestionOnCommitCharacter: true,
+                acceptSuggestionOnEnter: "on",
+                autoClosingBrackets: "always",
+                autoClosingQuotes: "always",
+                tabCompletion: "on",
+                formatOnType: true,
+                formatOnPaste: true,
+              }}
+            />
+          </div>
 
-          <div className="flex flex-wrap gap-3 mt-4 mb-4">
-            <Button
+          <div className="flex flex-wrap gap-2">
+            <button
               onClick={handleValidate}
-              variant="solid"
-              className="min-w-[130px]"
+              className="px-3 py-1.5 bg-red-600 text-white font-bold text-sm border-2 border-black dark:border-white transition-all duration-200 hover:translate-x-1 hover:translate-y-1 hover:border-red-600"
             >
-              Tester / Valider ✅
-            </Button>
-
-            <Button
+              Valider
+            </button>
+            <button
               onClick={handleReset}
-              variant="faded"
-              className="min-w-[130px]"
+              className="px-3 py-1.5 border-2 border-black dark:border-white bg-transparent font-bold text-sm text-black dark:text-white transition-all duration-200 hover:text-red-600 hover:border-red-600 hover:translate-x-1 hover:translate-y-1"
             >
-              Réinitialiser ↻
-            </Button>
-
-            <Button
+              Réinitialiser
+            </button>
+            <button
               onClick={() => setShowSolution((prev) => !prev)}
-              variant="light"
-              className="min-w-[130px] bg-gray-200 dark:bg-gray-700 hover:bg-transparent transition-colors"
-              aria-expanded={showSolution}
-              aria-controls="solution-section"
+              className={`px-3 py-1.5 border-2 font-bold text-sm transition-all duration-200 hover:border-red-600 hover:translate-x-1 hover:translate-y-1 ${showSolution ? "bg-red-600 text-white border-black dark:border-white" : "bg-transparent text-black dark:text-white border-black dark:border-white"}`}
             >
-              {showSolution
-                ? "Cacher la solution 👁️‍🗨️"
-                : "Afficher la solution 👁️"}
-            </Button>
+              {showSolution ? "Cacher Solution" : "Voir Solution"}
+            </button>
           </div>
 
           {validationMessage && (
-            <p
-              className={`font-semibold ${
-                validationSuccess ? "text-green-600" : "text-red-600"
+            <div
+              className={`p-2 border-l-4 border-red-600 font-bold text-sm ${
+                validationSuccess
+                  ? "text-black dark:text-white"
+                  : "text-red-600"
               }`}
             >
               {validationMessage}
-            </p>
+            </div>
           )}
 
           {showSolution && (
-            <section className="mt-4">
-              <h3 className="text-red-600 dark:text-red-500 font-semibold mb-2">
-                Solution
+            <section className="mt-4 border-2 border-black dark:border-white p-2 space-y-2">
+              <h3 className="text-lg font-black uppercase tracking-wide text-red-600">
+                SOLUTION
               </h3>
-              <div className="p-4 bg-gray-100 dark:bg-gray-900 rounded-md prose dark:prose-invert max-w-none overflow-auto">
+              <div className="prose max-w-none text-black dark:text-white prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-p:text-sm prose-li:text-sm">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   rehypePlugins={[rehypeHighlight]}
-                  children={"```javascript\n" + solutionCode + "\n```"}
+                  children={"```javascript\n" + solution + "\n```"}
                 />
               </div>
             </section>
           )}
-        </CardBody>
-      </Card>
-
-      <style jsx global>{`
-        .lineHighlight {
-          background-color: rgba(255, 215, 0, 0.3);
-        }
-        .lineHighlightDecoration {
-          border-left: 4px solid gold;
-        }
-        .monaco-editor.readonly .view-lines {
-          opacity: 1 !important;
-          filter: none !important;
-          user-select: text !important; /* autorise la sélection */
-          color: inherit !important; /* assure couleur normale */
-        }
-
-        .monaco-editor.readonly .monaco-editor-background {
-          background-color: transparent !important;
-          opacity: 1 !important;
-          filter: none !important;
-        }
-
-        .monaco-editor.readonly {
-          opacity: 1 !important;
-          filter: none !important;
-          user-select: text !important;
-        }
-      `}</style>
+        </div>
+      </div>
     </section>
   );
 }
