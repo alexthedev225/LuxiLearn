@@ -17,18 +17,10 @@ type Props = {
 };
 type ValidationResult = true | string | { success: boolean; message?: string };
 
-const Separator = () => (
-  <motion.div
-    initial={{ opacity: 0, scaleX: 0 }}
-    animate={{ opacity: 1, scaleX: 1 }}
-    transition={{ duration: 0.15 }}
-    viewport={{ once: true }}
-    className="w-full h-px sm:h-0.5 bg-red-600 border-t border-b border-black dark:border-white transform skew-x-2 max-w-4xl mx-auto"
-    aria-hidden="true"
-  />
-);
 
 export default function ClientLessonContent({ course, lesson }: Props) {
+  const [quizValidated, setQuizValidated] = useState(false);
+
   const { setLessonProgress, getLessonProgress } = useProgressStore();
   const [answers, setAnswers] = useState<(number | undefined)[]>([]);
   const [showScore, setShowScore] = useState(false);
@@ -72,35 +64,36 @@ export default function ClientLessonContent({ course, lesson }: Props) {
       setValidateFn(null);
     }
   }, [lesson]);
+const handleValidateQuiz = () => {
+  if (!lesson || !lesson.quizzes) return;
 
-  const handleValidateQuiz = () => {
-    if (!lesson || !lesson.quizzes) return;
+  const calculatedScore = answers.reduce<number>((acc, answer, idx) => {
+    if (answer === undefined) return acc;
+    return answer === lesson.quizzes![idx].correctAnswer ? acc + 1 : acc;
+  }, 0);
 
-    const calculatedScore = answers.reduce<number>((acc, answer, idx) => {
-      if (answer === undefined) return acc;
-      return answer === lesson.quizzes![idx].correctAnswer ? acc + 1 : acc;
-    }, 0);
+  const errorCount = answers.reduce<number>((acc, answer, idx) => {
+    if (answer === undefined) return acc;
+    return answer !== lesson.quizzes![idx].correctAnswer ? acc + 1 : acc;
+  }, 0);
 
-    const errorCount = answers.reduce<number>((acc, answer, idx) => {
-      if (answer === undefined) return acc;
-      return answer !== lesson.quizzes![idx].correctAnswer ? acc + 1 : acc;
-    }, 0);
+  if (errorCount === 0) {
+    confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
+  }
 
-    if (errorCount === 0) {
-      confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
-    }
+  setLessonProgress(course.slug, lesson.slug, {
+    score: calculatedScore,
+    totalQuestions: lesson.quizzes.length,
+    errorCount,
+    completed: true,
+    answersHistory: answers,
+  });
 
-    setLessonProgress(course.slug, lesson.slug, {
-      score: calculatedScore,
-      totalQuestions: lesson.quizzes.length,
-      errorCount,
-      completed: true,
-      answersHistory: answers,
-    });
+  setScore(calculatedScore);
+  setShowScore(true);
+  setQuizValidated(true); // <- bouton disparaît après clic
+};
 
-    setScore(calculatedScore);
-    setShowScore(true);
-  };
 
   const handleAnswer = (quizIndex: number, optionIndex: number) => {
     setAnswers((prev) => {
@@ -136,13 +129,12 @@ export default function ClientLessonContent({ course, lesson }: Props) {
     ? answers.length === lesson.quizzes.length &&
       answers.every((a) => a !== undefined)
     : true;
-  const allQuizCorrect = lesson.quizzes
-    ? answers.every((a, i) => a === lesson.quizzes![i].correctAnswer)
-    : true;
-  const canProceed =
-    allQuizAnswered &&
-    allQuizCorrect &&
-    (!lesson.exercise || exerciseCompleted);
+
+const canProceed =
+  allQuizAnswered &&
+  quizValidated && // <- le quiz a été validé
+  (!lesson.exercise || exerciseCompleted);
+
 
   return (
     <div className="min-h-screen max-w-4xl mx-auto  text-neutral-900 dark:text-neutral-100 py-32 px-4 sm:px-6">
@@ -223,7 +215,7 @@ export default function ClientLessonContent({ course, lesson }: Props) {
           transition={{ duration: 0.3 }}
           className="mb-6 sm:mb-8"
         >
-          <div className="h-0.5 sm:h-1 bg-red-600 w-8 sm:w-12 mb-2 sm:mb-3" />
+          <div className="h-0.5 sm:h-1 bg-gray-400 w-8 sm:w-12 mb-2 sm:mb-3 rounded-full" />
           <h2
             className="text-base sm:text-lg font-black uppercase tracking-wide text-neutral-900 dark:text-neutral-100 mb-2 sm:mb-3"
             style={{ fontSize: "clamp(0.875rem, 2vw, 1rem)" }}
@@ -238,36 +230,33 @@ export default function ClientLessonContent({ course, lesson }: Props) {
               const isCorrect = userAnswer === q.correctAnswer;
               return (
                 <div key={idx}>
-                  <div className="relative flex items-center gap-1 sm:gap-2 my-2 sm:my-3 bg-red-600 text-white border-2 border-black dark:border-white p-1.5 sm:p-2 rounded">
-                    <span className="w-4 h-4 flex items-center justify-center bg-red-600 text-white font-black border-2 border-black dark:border-white text-xs">
+                  <div className="relative flex items-center gap-2 my-2 sm:my-3 bg-gray-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 border border-gray-300 dark:border-neutral-600 p-2 rounded">
+                    <span className="w-5 h-5 flex items-center justify-center bg-gray-300 dark:bg-neutral-600 text-xs font-black rounded-full">
                       {idx + 1}
                     </span>
-                    <span
-                      className="text-sm sm:text-base font-black tracking-wide"
-                      style={{ fontSize: "clamp(0.75rem, 2vw, 0.875rem)" }}
-                    >
+                    <span className="text-sm sm:text-base font-black tracking-wide">
                       {q.question}
                     </span>
                     {isAnswered && (
-                      <span className="absolute top-1 sm:top-2 right-2 font-black text-xs sm:text-sm text-white">
+                      <span className="absolute top-1 sm:top-2 right-2 font-black text-xs sm:text-sm">
                         {isCorrect ? "✓" : "✗"}
                       </span>
                     )}
                   </div>
-                  <div className="h-0.5 sm:h-1 bg-red-600 mb-1 sm:mb-2" />
+                  <div className="h-0.5 sm:h-1 bg-gray-300 mb-1 sm:mb-2 rounded-full" />
                   <ul className="space-y-1">
                     {q.options.map((opt, oIdx) => (
                       <li key={oIdx}>
                         <label
-                          className={`flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 bg-white dark:bg-neutral-950 border-2 ${
+                          className={`flex items-center gap-2 p-2 bg-white dark:bg-neutral-950 border border-gray-300 dark:border-neutral-600 rounded ${
                             !isAnswered
-                              ? "border-black dark:border-white cursor-pointer transition-transform duration-200 hover:-translate-y-0.5"
+                              ? "cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-800 transition"
                               : oIdx === q.correctAnswer
-                                ? "border-red-600"
+                                ? "border-green-500"
                                 : oIdx === userAnswer
-                                  ? "border-black dark:border-white opacity-50 line-through"
-                                  : "border-black dark:border-white"
-                          } rounded`}
+                                  ? "opacity-50 line-through"
+                                  : ""
+                          }`}
                         >
                           <input
                             type="radio"
@@ -275,15 +264,10 @@ export default function ClientLessonContent({ course, lesson }: Props) {
                             onChange={() => handleAnswer(idx, oIdx)}
                             checked={userAnswer === oIdx}
                             disabled={isAnswered}
-                            className="w-2.5 h-2.5 accent-red-600"
+                            className="w-3 h-3 accent-gray-700"
                             aria-label={`Option ${oIdx + 1}: ${opt}`}
                           />
-                          <span
-                            className="text-xs sm:text-sm font-bold text-neutral-900 dark:text-neutral-100"
-                            style={{
-                              fontSize: "clamp(0.625rem, 1.5vw, 0.75rem)",
-                            }}
-                          >
+                          <span className="text-xs sm:text-sm font-bold">
                             {opt}
                           </span>
                         </label>
@@ -298,7 +282,7 @@ export default function ClientLessonContent({ course, lesson }: Props) {
       )}
 
       {/* Valider Quiz */}
-      {!allQuizCorrect && (
+      {!quizValidated && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -309,10 +293,10 @@ export default function ClientLessonContent({ course, lesson }: Props) {
           <button
             disabled={!allQuizAnswered}
             onClick={handleValidateQuiz}
-            className={`px-3 py-1.5 font-black text-xs sm:text-sm border-2 uppercase tracking-wide rounded ${
+            className={`px-4 py-2 font-black text-sm border rounded-md tracking-wide transition-transform duration-200 ${
               !allQuizAnswered
-                ? "border-black dark:border-white opacity-50 cursor-not-allowed"
-                : "border-red-600 bg-red-600 text-white transition-transform duration-200 hover:-translate-y-0.5"
+                ? "bg-neutral-400 border-neutral-400 cursor-not-allowed opacity-50"
+                : "bg-neutral-700 text-white border-neutral-700 hover:-translate-y-0.5 hover:bg-neutral-800"
             }`}
             aria-label="Valider le quiz"
           >
@@ -330,7 +314,6 @@ export default function ClientLessonContent({ course, lesson }: Props) {
           transition={{ duration: 0.3 }}
           className="border-2 border-black dark:border-white p-2 sm:p-3 mb-6 sm:mb-8 text-center rounded"
         >
-          <Separator />
           <div className="h-0.5 sm:h-1 bg-red-600 w-8 sm:w-12 mx-auto mb-2 sm:mb-3" />
           <h3
             className="text-base sm:text-lg font-black uppercase mb-1 sm:mb-2"

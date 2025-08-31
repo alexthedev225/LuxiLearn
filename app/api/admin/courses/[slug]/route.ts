@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { verifyAdmin } from "@/lib/helpers/verifyAdmin";
 
 // Typages
 interface Exercise {
@@ -40,6 +41,8 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  await verifyAdmin(request); // ← protection admin
+
   const { slug } = await params;
 
   try {
@@ -109,7 +112,7 @@ export async function PUT(
                 }
               : undefined,
             quizzes: {
-              deleteMany: {}, // supprime les anciens quizzes
+              deleteMany: {},
               create: (lesson.quizzes || []).map((quiz) => ({
                 question: quiz.question ?? null,
                 options: quiz.options ?? [],
@@ -169,15 +172,15 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  await verifyAdmin(request); // ← protection admin
+
   const { slug } = await params;
 
   try {
-    await prisma.course.delete({
-      where: { slug },
-    });
+    await prisma.course.delete({ where: { slug } });
 
     revalidatePath("/courses");
     revalidatePath(`/courses/${slug}`);

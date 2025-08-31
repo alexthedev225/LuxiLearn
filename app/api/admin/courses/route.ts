@@ -1,10 +1,8 @@
-//api/admin/courses/route.ts
-
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { verifyAdmin } from "@/lib/helpers/verifyAdmin";
 
-// Typages des données
 interface Exercise {
   title: string;
   prompt: string;
@@ -33,11 +31,14 @@ interface Course {
   description: string;
   level: string;
   slug: string;
+  lessons: Lesson[];
   duration: string;
   technologies: string[];
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  await verifyAdmin(req);
+
   try {
     const courses = await prisma.course.findMany({
       select: { id: true, title: true, slug: true },
@@ -49,9 +50,11 @@ export async function GET() {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
+  const { userId } = await verifyAdmin(req); // ← récupère userId admin
+
   try {
-    const formData = await request.formData();
+    const formData = await req.formData();
 
     const courseRaw = formData.get("course");
     if (!courseRaw) {
@@ -64,10 +67,7 @@ export async function POST(request: NextRequest) {
 
     const lessonsRaw = formData.get("lessons");
     let lessons: Lesson[] = [];
-    if (lessonsRaw) {
-      lessons = JSON.parse(lessonsRaw.toString());
-    }
-
+    if (lessonsRaw) lessons = JSON.parse(lessonsRaw.toString());
 
     // Gestion technologies
     let technologies: string[] = [];
@@ -76,9 +76,8 @@ export async function POST(request: NextRequest) {
     } else if (typeof course.technologies === "string") {
       try {
         technologies = JSON.parse(course.technologies);
-        if (!Array.isArray(technologies)) {
+        if (!Array.isArray(technologies))
           throw new Error("Technologies doit être un tableau");
-        }
       } catch {
         return NextResponse.json(
           { error: "Format technologies invalide" },
@@ -87,9 +86,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Création cascade avec exercices et quiz
     const createdCourse = await prisma.course.create({
       data: {
+        userId, // ← on rattache le cours à l’admin créateur
         title: course.title ?? "",
         description: course.description ?? "",
         level: course.level ?? "",
@@ -98,6 +97,7 @@ export async function POST(request: NextRequest) {
         technologies,
         lessons: {
           create: lessons.map((lesson) => ({
+            userId, // ← chaque leçon appartient aussi à ce user
             title: lesson.title ?? "",
             description: lesson.description ?? "",
             duration: lesson.duration ?? "",
@@ -124,16 +124,11 @@ export async function POST(request: NextRequest) {
         },
       },
       include: {
-        lessons: {
-          include: {
-            exercise: true,
-            quizzes: true,
-          },
-        },
+        lessons: { include: { exercise: true, quizzes: true } },
       },
     });
 
-    // Revalidation ISR (sans await)
+    // Revalidation ISR
     revalidatePath("/courses");
     revalidatePath(`/courses/${createdCourse.slug}`);
     for (const lesson of createdCourse.lessons) {

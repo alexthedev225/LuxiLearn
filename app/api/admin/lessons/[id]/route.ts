@@ -2,11 +2,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { verifyAdmin } from "@/lib/helpers/verifyAdmin";
 
 export async function GET(
-  _request: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  await verifyAdmin(req); // ← protection admin
+
   const { id } = await params;
 
   try {
@@ -29,16 +32,18 @@ export async function GET(
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
 export async function PUT(
-  request: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  await verifyAdmin(req); // ← protection admin
+
   const { id } = await params;
 
   try {
-    const body = await request.json();
+    const body = await req.json();
 
-    // Nettoyage : ne jamais passer lessonId ou id dans create/update
     const exerciseData = body.exercise
       ? {
           upsert: {
@@ -70,7 +75,7 @@ export async function PUT(
       : undefined;
 
     const updatedLesson = await prisma.lesson.update({
-      where: { id: Number(id) }, // id doit correspondre au @id
+      where: { id: Number(id) },
       data: {
         title: body.title,
         description: body.description,
@@ -83,7 +88,6 @@ export async function PUT(
       include: { exercise: true, quizzes: true, course: true },
     });
 
-    // Revalidation des pages
     revalidatePath(`/courses/${updatedLesson.course.slug}`);
     revalidatePath(
       `/courses/${updatedLesson.course.slug}/lessons/${updatedLesson.slug}`
@@ -100,9 +104,11 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  await verifyAdmin(req); // ← protection admin
+
   const { id } = await params;
 
   try {

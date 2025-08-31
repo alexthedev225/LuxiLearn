@@ -1,7 +1,7 @@
-// api/admin/lessons/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { verifyAdmin } from "@/lib/helpers/verifyAdmin";
 
 interface Exercise {
   title: string;
@@ -25,10 +25,13 @@ interface LessonBody {
   content: string;
   exercise?: Exercise;
   quizzes?: Quiz[];
+  userId: number; // 👈 on ajoute userId ici
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    await verifyAdmin(req); // ← protection admin
+
     const lessons = await prisma.lesson.findMany({
       select: {
         id: true,
@@ -37,33 +40,33 @@ export async function GET() {
         duration: true,
         slug: true,
         content: true,
+
         course: {
-          select: {
-            id: true,
-            title: true,
-            slug: true,
-          },
+          select: { id: true, title: true, slug: true },
         },
         exercise: true,
         quizzes: true,
         createdAt: true,
         updatedAt: true,
       },
-      orderBy: {
-        createdAt: "desc", // Trier par date de création, les plus récentes en premier
-      },
+      orderBy: { createdAt: "desc" },
     });
 
     return NextResponse.json({ lessons });
   } catch (error) {
     console.error("Erreur récupération leçons :", error);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Accès refusé ou erreur serveur" },
+      { status: 401 }
+    );
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
+  const { userId } = await verifyAdmin(req);
+
   try {
-    const body: LessonBody = await request.json();
+    const body: LessonBody = await req.json();
 
     const createdLesson = await prisma.lesson.create({
       data: {
@@ -73,12 +76,13 @@ export async function POST(request: NextRequest) {
         slug: body.slug,
         content: body.content,
         course: { connect: { slug: body.courseSlug } },
+        user: { connect: { id: userId } }, // ← ici la relation user
         exercise: body.exercise ? { create: { ...body.exercise } } : undefined,
         quizzes: {
           create: (body.quizzes || []).map((quiz) => ({ ...quiz })),
         },
       },
-      include: { exercise: true, quizzes: true, course: true },
+      include: { exercise: true, quizzes: true, course: true, user: true },
     });
 
     revalidatePath(`/courses/${body.courseSlug}`);
@@ -88,8 +92,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Erreur création leçon :", error);
     return NextResponse.json(
-      { error: "Erreur lors de la création de la leçon" },
-      { status: 500 }
+      { error: "Accès refusé ou erreur serveur" },
+      { status: 401 }
     );
   }
 }
