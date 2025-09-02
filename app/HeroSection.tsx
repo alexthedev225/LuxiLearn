@@ -174,31 +174,34 @@ export const HeroSection = () => {
   useEffect(() => setIsVisible(true), []);
 
   return (
-    <section className="relative bg-white dark:bg-black text-black dark:text-white pt-10 pb-32">
-      <div className="relative z-10 w-full max-w-[95vw] sm:max-w-7xl mx-auto flex items-center justify-center gap-6 sm:gap-10 px-4 sm:px-6">
+    <section className="relative bg-white dark:bg-black text-black dark:text-white pt-10 pb-32 px-6">
+      <div className="relative z-10 w-full  sm:max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-0 ">
         {/* Texte */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: isVisible ? 1 : 0, x: isVisible ? 0 : -20 }}
           transition={{ duration: 0.6 }}
-          className="flex flex-col space-y-2 sm:space-y-2"
+          className="flex flex-col space-y-2 sm:space-y-2 w-full lg:w-1/2 flex-shrink-0 text-center lg:text-left items-center lg:items-start "
         >
           <h1
-            className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-wide"
-            style={{ fontSize: "clamp(1.5rem, 5vw, 2.25rem)" }}
+            className="text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-wide"
+            style={{ fontSize: "clamp(1.75rem, 4vw, 2.5rem)" }}
           >
-            Deviens développeur
+            Deviens
           </h1>
-          <h2
-            className="text-2xl sm:text-3xl md:text-4xl text-red-600 font-black uppercase tracking-wide"
-            style={{ fontSize: "clamp(1.5rem, 5vw, 2.25rem)" }}
+          <h1
+            className="text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-wide"
+            style={{ fontSize: "clamp(1.75rem, 4vw, 2.5rem)" }}
+          >
+            développeur
+          </h1>
+          <h1
+            className="text-3xl sm:text-4xl lg:text-5xl text-red-600 font-black uppercase tracking-wide"
+            style={{ fontSize: "clamp(1.75rem, 4vw, 2.5rem)" }}
           >
             d'exception
-          </h2>
-          <p
-            className="text-sm sm:text-base leading-relaxed text-neutral-900 dark:text-neutral-300 mt-2 max-w-lg sm:max-w-xl mx-auto"
-            style={{ fontSize: "clamp(0.875rem, 2.5vw, 1rem)" }}
-          >
+          </h1>
+          <p className="text-base leading-relaxed text-neutral-900 dark:text-neutral-300 mt-2 max-w-lg lg:max-w-md  ">
             Plonge dans un univers où chaque ligne de code que tu écris te
             rapproche de la maîtrise, où tes projets prennent vie, et où chaque
             défi devient une étape vers ton avenir de développeur d’exception.
@@ -225,7 +228,7 @@ export const HeroSection = () => {
             y: isVisible ? 0 : 10,
           }}
           transition={{ duration: 0.6 }}
-          className="hidden md:flex justify-center items-center w-full"
+          className="hidden sm:flex justify-center lg:justify-end items-center w-full lg:w-1/2 flex-shrink-0 "
         >
           <TypewriterCode />
         </motion.div>

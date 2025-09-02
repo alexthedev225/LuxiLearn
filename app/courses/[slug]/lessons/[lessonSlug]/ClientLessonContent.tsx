@@ -30,21 +30,22 @@ export default function ClientLessonContent({ course, lesson }: Props) {
   >(null);
   const [exerciseCompleted, setExerciseCompleted] = useState(false);
 
-  const safeFunctionFromString = (
-    fnString: string
-  ): ((args: { code: string }) => ValidationResult) | null => {
-    try {
-      const fn = new Function(`return (${fnString})`)();
-      if (typeof fn === "function") return fn;
-      return null;
-    } catch (err) {
-      console.error(
-        "Erreur lors de la création de la fonction de validation :",
-        err
-      );
-      return null;
-    }
-  };
+ const safeFunctionFromString = (
+   fnString: string
+ ): ((args: { code: string }) => ValidationResult) | null => {
+   try {
+     const fn = new Function(`${fnString}; return validateCode`)();
+     if (typeof fn === "function") return fn;
+     return null;
+   } catch (err) {
+     console.error(
+       "Erreur lors de la création de la fonction de validation :",
+       err
+     );
+     return null;
+   }
+ };
+
 
   useEffect(() => {
     if (!lesson) return;
