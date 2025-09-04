@@ -30,7 +30,7 @@ const Separator = () => (
     animate={{ opacity: 1, scaleX: 1 }}
     transition={{ duration: 0.15 }}
     viewport={{ once: true }}
-    className="w-full h-px sm:h-0.5 bg-red-600 border-t border-b border-black dark:border-white transform skew-x-2 max-w-4xl mx-auto"
+    className="w-full h-px sm:h-0.5 bg-red-600 border-t border-b border-black dark:border-white transform skew-x-2 max-w-6xl mx-auto"
     aria-hidden="true"
   />
 );
@@ -161,7 +161,7 @@ export default function CoursesClient({ courses }: { courses: Course[] }) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto min-h-screen text-neutral-900 dark:text-neutral-100  py-32 px-4 sm:px-6">
+    <div className="max-w-6xl mx-auto min-h-screen text-neutral-900 dark:text-neutral-100  py-32 ">
       {/* Hero Section - Parcours */}
       <section className="mb-6 sm:mb-8">
         {/* Navigation */}
@@ -212,7 +212,7 @@ export default function CoursesClient({ courses }: { courses: Course[] }) {
 
    
       {/* CTA Bottom */}
-      <div className="text-center mt-8 sm:mt-12 border-t-2 border-black dark:border-white pt-4 sm:pt-6">
+      <div className="text-center mt-8 sm:mt-12  pt-4 sm:pt-6">
         <div className="h-0.5 sm:h-1 bg-red-600 w-8 sm:w-12 mx-auto mb-2 sm:mb-3" />
         <h2
           className="text-lg sm:text-xl md:text-2xl font-black uppercase tracking-wide mb-2 sm:mb-3"

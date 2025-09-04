@@ -31,7 +31,7 @@ const Separator = () => (
     animate={{ opacity: 1, scaleX: 1 }}
     transition={{ duration: 0.15 }}
     viewport={{ once: true }}
-    className="w-full h-px sm:h-0.5 bg-red-600 border-t border-b border-black dark:border-white transform skew-x-2 max-w-4xl mx-auto"
+    className="w-full h-px sm:h-0.5 bg-red-600 border-t border-b border-black dark:border-white transform skew-x-2 max-w-6xl mx-auto"
     aria-hidden="true"
   />
 );
@@ -59,9 +59,7 @@ const LessonCard = ({
       }
       aria-label={`Ouvrir la leçon ${lesson.title}`}
     >
-      {/* Accent Line */}
-      <div className="h-0.5 sm:h-1 bg-red-600 mb-2 sm:mb-3" />
-
+      
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-2 mb-2 sm:mb-3">
         <div
@@ -80,7 +78,7 @@ const LessonCard = ({
       {/* Description */}
       {lesson.description && (
         <p
-          className="text-2xs sm:text-xs text-neutral-900 dark:text-neutral-100 mb-2 sm:mb-3"
+          className="text-2xs sm:text-xs text-neutral-900 dark:text-neutral-100 mb-2 sm:mb-3 line-clamp-1"
           style={{ fontSize: "clamp(0.625rem, 1.5vw, 0.75rem)" }}
         >
           {lesson.description}
@@ -130,7 +128,7 @@ export default function ClientCoursePage({ course }: { course: Course }) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto min-h-screen  text-neutral-900 dark:text-neutral-100 py-32 px-4 sm:px-6">
+    <div className="max-w-6xl mx-auto min-h-screen  text-neutral-900 dark:text-neutral-100 py-32 ">
       {/* Navigation */}
       <nav className="mb-4 sm:mb-6">
         <div className="flex items-center gap-1 text-2xs sm:text-xs font-bold">
@@ -159,7 +157,7 @@ export default function ClientCoursePage({ course }: { course: Course }) {
           {course.title.toUpperCase()}
         </h1>
         <p
-          className="text-xs sm:text-sm mb-4 sm:mb-6 max-w-md sm:max-w-lg"
+          className="text-xs sm:text-sm mb-4 sm:mb-6 max-w-md sm:max-w-2xl"
           style={{ fontSize: "clamp(0.75rem, 2vw, 0.875rem)" }}
         >
           {course.description}
@@ -200,7 +198,7 @@ export default function ClientCoursePage({ course }: { course: Course }) {
         >
           PROGRAMME
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-2 sm:gap-4">
+        <div className="grid grid-cols-1  gap-2 sm:gap-4">
           {course.lessons.map((lesson, index) => (
             <LessonCard
               key={lesson.id}

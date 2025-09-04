@@ -1,10 +1,9 @@
 import { getCourses } from "@/lib/getCourses";
 import Link from "next/link";
 import { Clock, Users, Star, ArrowRight, BookOpen } from "lucide-react";
-import { SiJavascript } from "react-icons/si";
-
+import type { Course } from "./courses/[slug]/lessons/[lessonSlug]/types";
 export default async function CoursesPage() {
-  const courses = await getCourses();
+  const courses: Course[] = await getCourses(); // <- type explicite
   const limitedCourses = courses.slice(0, 2);
 
   return (
@@ -57,7 +56,6 @@ export default async function CoursesPage() {
               </div>
             </div>
           </div>
-         
         </div>
 
         {/* Cards à droite */}

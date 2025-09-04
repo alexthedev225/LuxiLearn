@@ -1,9 +1,11 @@
 // app/admin/lessons/[id]/edit/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+
+import { Editor as ToastEditor } from "@toast-ui/react-editor";
+
 import { useRouter, useParams } from "next/navigation";
-import dynamic from "next/dynamic";
 import {
   BookOpen,
   Clock,
@@ -14,31 +16,54 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
-// Dynamically import Toast UI Editor
-const Editor = dynamic(
-  () => import("@toast-ui/react-editor").then((mod) => mod.Editor),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="h-[300px] bg-white dark:bg-black border-2 border-black dark:border-white p-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-red-600 mx-auto mb-4"></div>
-          <p className="font-bold text-black dark:text-white tracking-wide">
-            CHARGEMENT DE L'ÉDITEUR...
-          </p>
-        </div>
-      </div>
-    ),
-  }
-);
+type Quiz = {
+  question: string;
+  options: string[];
+  correctAnswer: number | null;
+};
 
-// ToastMarkdownEditor component
-function ToastMarkdownEditor({ value, onChange }) {
-  const editorRef = React.useRef();
+type Exercise = {
+  title: string;
+  prompt: string;
+  solution: string;
+  validateCode: string;
+};
+
+type Lesson = {
+  courseSlug: string;
+  title: string;
+  description: string;
+  duration: string;
+  slug: string;
+  content: string;
+  exercise: Exercise;
+  quizzes: Quiz[];
+};
+
+type Course = {
+  id: string;
+  slug: string;
+  title: string;
+};
+
+
+type ToastMarkdownEditorProps = {
+  value: string;
+  onChange: (val: string) => void;
+};
+
+ function ToastMarkdownEditor({
+  value,
+  onChange,
+}: ToastMarkdownEditorProps) {
+  const editorRef = useRef<ToastEditor | null>(null);
 
   const handleChange = () => {
-    const markdown = editorRef.current?.getInstance().getMarkdown();
-    onChange(markdown);
+    const editorInstance = editorRef.current?.getInstance();
+    if (editorInstance) {
+      const markdown = editorInstance.getMarkdown();
+      onChange(markdown);
+    }
   };
 
   useEffect(() => {
@@ -47,14 +72,14 @@ function ToastMarkdownEditor({ value, onChange }) {
 
   return (
     <div className="border-2 border-black dark:border-white">
-      <Editor
+      <ToastEditor
+        ref={editorRef}
         initialValue={value}
         previewStyle="vertical"
         height="700px"
         initialEditType="markdown"
-        useCommandShortcut={true}
+        useCommandShortcut
         onChange={handleChange}
-        ref={editorRef}
       />
     </div>
   );
@@ -64,7 +89,7 @@ export default function LessonEditForm() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-  const [lesson, setLesson] = useState({
+  const [lesson, setLesson] = useState<Lesson>({
     courseSlug: "",
     title: "",
     description: "",
@@ -74,11 +99,12 @@ export default function LessonEditForm() {
     exercise: { title: "", prompt: "", solution: "", validateCode: "" },
     quizzes: [],
   });
-  const [courses, setCourses] = useState([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Fetch lesson data
   useEffect(() => {
@@ -129,31 +155,30 @@ export default function LessonEditForm() {
   }, []);
 
   // Update lesson fields
-  const updateLesson = (newData) => {
+  const updateLesson = (newData: Partial<Lesson>) => {
     setLesson((prev) => ({ ...prev, ...newData }));
   };
 
   // Update exercise fields
-  const updateExercise = (newData) => {
+  const updateExercise = (newData: Partial<Exercise>) => {
     setLesson((prev) => ({
       ...prev,
       exercise: { ...(prev.exercise || {}), ...newData },
     }));
   };
-
   // Add a new quiz
   const addQuiz = () => {
     setLesson((prev) => ({
       ...prev,
       quizzes: [
-        ...(prev.quizzes || []),
-        { question: "", options: ["", ""], correctAnswer: null },
+        ...prev.quizzes,
+        { question: "", options: [""], correctAnswer: null } as Quiz,
       ],
     }));
   };
 
   // Update a quiz
-  const updateQuiz = (quizIndex, newData) => {
+  const updateQuiz = (quizIndex: number, newData: Partial<Quiz>) => {
     setLesson((prev) => {
       const newQuizzes = [...prev.quizzes];
       newQuizzes[quizIndex] = { ...newQuizzes[quizIndex], ...newData };
@@ -162,7 +187,7 @@ export default function LessonEditForm() {
   };
 
   // Add a quiz option
-  const addQuizOption = (quizIndex) => {
+  const addQuizOption = (quizIndex: number) => {
     setLesson((prev) => {
       const newQuizzes = [...prev.quizzes];
       newQuizzes[quizIndex].options.push("");
@@ -171,7 +196,11 @@ export default function LessonEditForm() {
   };
 
   // Update a quiz option
-  const updateQuizOption = (quizIndex, optionIndex, value) => {
+  const updateQuizOption = (
+    quizIndex: number,
+    optionIndex: number,
+    value: string
+  ) => {
     setLesson((prev) => {
       const newQuizzes = [...prev.quizzes];
       newQuizzes[quizIndex].options[optionIndex] = value;
@@ -180,7 +209,7 @@ export default function LessonEditForm() {
   };
 
   // Remove a quiz option
-  const removeQuizOption = (quizIndex, optionIndex) => {
+  const removeQuizOption = (quizIndex: number, optionIndex: number) => {
     setLesson((prev) => {
       const newQuizzes = [...prev.quizzes];
       newQuizzes[quizIndex].options.splice(optionIndex, 1);
@@ -189,7 +218,7 @@ export default function LessonEditForm() {
   };
 
   // Remove a quiz
-  const removeQuiz = (quizIndex) => {
+  const removeQuiz = (quizIndex: number) => {
     setLesson((prev) => {
       const newQuizzes = prev.quizzes.filter((_, i) => i !== quizIndex);
       return { ...prev, quizzes: newQuizzes };
@@ -197,8 +226,9 @@ export default function LessonEditForm() {
   };
 
   // Handle form submission (PUT)
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     if (!lesson.title || !lesson.slug || !lesson.courseSlug) {
       setError(
         "VEUILLEZ REMPLIR TOUS LES CHAMPS OBLIGATOIRES (TITRE, SLUG, COURS)."
@@ -212,6 +242,7 @@ export default function LessonEditForm() {
         quiz.correctAnswer === null ||
         quiz.correctAnswer >= quiz.options.length
     );
+
     if (invalidQuizzes) {
       setError(
         "CHAQUE QUIZ DOIT AVOIR AU MOINS 2 OPTIONS ET UNE RÉPONSE CORRECTE VALIDE."
@@ -221,6 +252,7 @@ export default function LessonEditForm() {
 
     setIsSubmitting(true);
     setError("");
+
     try {
       const res = await fetch(`/api/admin/lessons/${id}`, {
         method: "PUT",
@@ -240,16 +272,20 @@ export default function LessonEditForm() {
 
       alert("LEÇON MISE À JOUR AVEC SUCCÈS !");
       router.push(`/admin/lessons/${id}`);
-    } catch (err) {
-      setError(err.message || "ERREUR LORS DE LA MISE À JOUR DE LA LEÇON");
+    } catch (err: unknown) {
       console.error(err);
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("ERREUR LORS DE LA MISE À JOUR DE LA LEÇON");
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
   // Handle lesson deletion (DELETE)
-  const handleDelete = async () => {
+  const handleDelete = async (): Promise<void> => {
     if (
       !confirm(
         "ÊTES-VOUS SÛR DE VOULOIR SUPPRIMER CETTE LEÇON ? CETTE ACTION EST IRRÉVERSIBLE."
@@ -274,9 +310,13 @@ export default function LessonEditForm() {
 
       alert("LEÇON SUPPRIMÉE AVEC SUCCÈS !");
       router.push(`/courses/${lesson.courseSlug}`);
-    } catch (err) {
-      setError(err.message || "ERREUR LORS DE LA SUPPRESSION DE LA LEÇON");
+    } catch (err: unknown) {
       console.error(err);
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("ERREUR LORS DE LA SUPPRESSION DE LA LEÇON");
+      }
     } finally {
       setIsDeleting(false);
     }

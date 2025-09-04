@@ -7,13 +7,33 @@ import { Edit, Trash, Plus, Loader2 } from "lucide-react";
 import Link from "next/link";
 import toast, { Toaster } from "react-hot-toast";
 
-export default function LessonsByCourse({ lessons, courses }) {
-  const router = useRouter();
-  const [localLessons, setLocalLessons] = useState(lessons);
-  const [isDeleting, setIsDeleting] = useState(null);
-  const [showConfirmModal, setShowConfirmModal] = useState(null);
+interface Course {
+  id: string;
+  title: string;
+}
 
-  const handleDelete = async (id) => {
+interface Lesson {
+  id: string;
+  title: string;
+  duration: string;
+  course: Course;
+}
+
+interface LessonsByCourseProps {
+  lessons: Lesson[];
+  courses: Course[];
+}
+
+export default function LessonsByCourse({
+  lessons,
+  courses,
+}: LessonsByCourseProps) {
+  const router = useRouter();
+  const [localLessons, setLocalLessons] = useState<Lesson[]>(lessons);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState<string | null>(null);
+
+  const handleDelete = async (id: string) => {
     setIsDeleting(id);
     try {
       const res = await fetch(`/api/admin/lessons/${id}`, { method: "DELETE" });
@@ -48,7 +68,7 @@ export default function LessonsByCourse({ lessons, courses }) {
   }));
 
   return (
-    <motion.div className="min-h-screen bg-white dark:bg-black text-black dark:text-white  space-y-12 max-w-5xl mx-auto ">
+    <motion.div className="min-h-screen bg-white dark:bg-black text-black dark:text-white space-y-12 max-w-5xl mx-auto">
       <Toaster position="top-right" />
       <div className="mb-12">
         {/* Navigation Breadcrumb */}

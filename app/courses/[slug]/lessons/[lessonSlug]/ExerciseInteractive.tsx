@@ -2,12 +2,28 @@
 
 import { useState, useEffect, useRef } from "react";
 import MonacoEditor, { OnMount } from "@monaco-editor/react";
-import type * as monaco from "monaco-editor";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 
-type ValidationResult = true | string | { success: boolean; message?: string };
+export type ValidationResult =
+  | true
+  | string
+  | { success: boolean; message?: string };
+
+export interface ExerciseInteractiveProps {
+  prompt: string;
+  solution: string;
+  title: string;
+  validate?: (args: { code: string }) => ValidationResult;
+  onValidateSuccess?: () => void;
+}
+// Déclarer monaco sur window pour TypeScript
+declare global {
+  interface Window {
+    monaco?: typeof import("monaco-editor");
+  }
+}
 
 export default function ExerciseInteractive({
   prompt,
@@ -15,22 +31,15 @@ export default function ExerciseInteractive({
   title,
   onValidateSuccess,
   validate,
-}: {
-  prompt: string;
-  solution: string;
-  title: string;
-  validate?: (args: { code: string }) => ValidationResult;
-  onValidateSuccess?: () => void;
-}) {
-  const [code, setCode] = useState(prompt);
-  const [validationMessage, setValidationMessage] = useState("");
-  const [validationSuccess, setValidationSuccess] = useState(false);
-  const [showSolution, setShowSolution] = useState(false);
+}: ExerciseInteractiveProps) {
+  const [code, setCode] = useState<string>(prompt);
+  const [validationMessage, setValidationMessage] = useState<string>("");
+  const [validationSuccess, setValidationSuccess] = useState<boolean>(false);
+  const [showSolution, setShowSolution] = useState<boolean>(false);
   const [decorations, setDecorations] = useState<string[]>([]);
-  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
 
-  // Fonction pour déterminer le thème en fonction de Tailwind et prefers-color-scheme
-  const getTheme = () => {
+  const getTheme = (): "vs-dark" | "light" => {
     const isDarkTailwind = document.documentElement.classList.contains("dark");
     const isSystemDark = window.matchMedia(
       "(prefers-color-scheme: dark)"
@@ -38,25 +47,21 @@ export default function ExerciseInteractive({
     return isDarkTailwind || isSystemDark ? "vs-dark" : "light";
   };
 
-  // Mettre à jour le thème lors du montage et des changements de mode
   useEffect(() => {
     if (editorRef.current && window.monaco) {
       window.monaco.editor.setTheme(getTheme());
     }
 
-    // Écouter les changements de classe dark (Tailwind)
     const observer = new MutationObserver(() => {
       if (editorRef.current && window.monaco) {
         window.monaco.editor.setTheme(getTheme());
       }
     });
-
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["class"],
     });
 
-    // Écouter les changements de prefers-color-scheme
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleSystemThemeChange = () => {
       if (editorRef.current && window.monaco) {
@@ -65,7 +70,6 @@ export default function ExerciseInteractive({
     };
     mediaQuery.addEventListener("change", handleSystemThemeChange);
 
-    // Nettoyage
     return () => {
       observer.disconnect();
       mediaQuery.removeEventListener("change", handleSystemThemeChange);
@@ -79,7 +83,7 @@ export default function ExerciseInteractive({
     setShowSolution(false);
   }, [prompt]);
 
-  const normalizeCode = (code: string) =>
+  const normalizeCode = (code: string): string =>
     code.replace(/\s+/g, " ").trim().toLowerCase();
 
   const handleValidate = () => {
@@ -98,7 +102,7 @@ export default function ExerciseInteractive({
     }
 
     try {
-      const result = validate(code);
+      const result = validate({ code });
       if (result === true || (typeof result === "object" && result.success)) {
         setValidationSuccess(true);
         setValidationMessage("✅ Correct");
@@ -123,21 +127,22 @@ export default function ExerciseInteractive({
     setShowSolution(false);
   };
 
-  const handleEditorDidMount: OnMount = (editor, monaco) => {
+  const handleEditorDidMount: OnMount = (editor, monacoInstance) => {
     editorRef.current = editor;
 
-    monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-      jsx: monaco.languages.typescript.JsxEmit.React,
-      target: monaco.languages.typescript.ScriptTarget.ESNext,
+    monacoInstance.languages.typescript.javascriptDefaults.setCompilerOptions({
+      jsx: monacoInstance.languages.typescript.JsxEmit.React,
+      target: monacoInstance.languages.typescript.ScriptTarget.ESNext,
       allowNonTsExtensions: true,
       esModuleInterop: true,
-      moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
-      module: monaco.languages.typescript.ModuleKind.ESNext,
+      moduleResolution:
+        monacoInstance.languages.typescript.ModuleResolutionKind.NodeJs,
+      module: monacoInstance.languages.typescript.ModuleKind.ESNext,
       noEmit: true,
       strict: false,
     });
 
-    monaco.languages.typescript.javascriptDefaults.addExtraLib(
+    monacoInstance.languages.typescript.javascriptDefaults.addExtraLib(
       `
       declare namespace React {
         interface Attributes {}
@@ -151,11 +156,10 @@ export default function ExerciseInteractive({
       "file:///node_modules/@types/react/index.d.ts"
     );
 
-    // Appliquer le thème initial
-    monaco.editor.setTheme(getTheme());
+monacoInstance.editor.setTheme(getTheme());
   };
 
-  function findAllDiffLines(starter: string, solution: string): number[] {
+  const findAllDiffLines = (starter: string, solution: string): number[] => {
     const starterLines = starter.split("\n");
     const solutionLines = solution.split("\n");
     const maxLines = Math.max(starterLines.length, solutionLines.length);
@@ -168,14 +172,15 @@ export default function ExerciseInteractive({
       }
     }
     return diffLines;
-  }
+  };
 
-  const highlightSolutionLines = (lines: number[]) => {
-    if (!editorRef.current || !window.monaco) return;
+  const highlightSolutionLines = (lines: number[]): void => {
+    const monacoInstance = window.monaco;
+    if (!editorRef.current || !monacoInstance) return;
 
     const newDecorations = editorRef.current.deltaDecorations(decorations, [
       ...lines.map((lineNumber) => ({
-        range: new window.monaco.Range(lineNumber, 1, lineNumber, 1),
+        range: new monacoInstance.Range(lineNumber, 1, lineNumber, 1),
         options: {
           isWholeLine: true,
           className: "lineHighlight",
@@ -183,13 +188,13 @@ export default function ExerciseInteractive({
         },
       })),
     ]);
+
     setDecorations(newDecorations);
   };
 
   useEffect(() => {
     if (showSolution) {
-      const linesToHighlight = findAllDiffLines(prompt, solution);
-      highlightSolutionLines(linesToHighlight);
+      highlightSolutionLines(findAllDiffLines(prompt, solution));
     } else if (editorRef.current) {
       editorRef.current.deltaDecorations(decorations, []);
       setDecorations([]);
@@ -200,7 +205,7 @@ export default function ExerciseInteractive({
     <section className="mb-4">
       <div className="relative">
         <div className="flex items-center gap-1 mb-2">
-          <h2 className=" font-black uppercase tracking-wide text-black dark:text-white">
+          <h2 className="font-black uppercase tracking-wide text-black dark:text-white">
             Exercice interactif
           </h2>
         </div>
@@ -254,10 +259,10 @@ export default function ExerciseInteractive({
 
           {validationMessage && (
             <div
-              className={`pt-4 font-bold  ${
+              className={`pt-4 font-bold ${
                 validationSuccess
-                  ? "text-green-800 dark:text-green-400 "
-                  : "text-red-600 "
+                  ? "text-green-800 dark:text-green-400"
+                  : "text-red-600"
               }`}
             >
               {validationMessage}
@@ -273,7 +278,7 @@ export default function ExerciseInteractive({
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   rehypePlugins={[rehypeHighlight]}
-                  children={"```javascript\n" + solution + "\n```"}
+                  children={`\`\`\`javascript\n${solution}\n\`\`\``}
                 />
               </div>
             </section>

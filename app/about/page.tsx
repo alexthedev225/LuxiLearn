@@ -8,80 +8,95 @@ import {
   Heart,
   Lightbulb,
   TrendingUp,
-  Users,
   Award,
-  Calendar,
   ArrowRight,
   BookOpen,
-  Star,
   Play,
-  Check,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
+// 🔹 2. Typer les objets utilisés (stats, values, milestones)
+type Stat = {
+  number: string;
+  label: string;
+  icon: LucideIcon;
+};
+
+type Value = {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+};
+
+type Milestone = {
+  year: string;
+  title: string;
+  description: string;
+  icon: LucideIcon;
+  status: "completed" | "current";
+};
 const AboutPage = () => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [activeValue, setActiveValue] = useState(null);
-
+  const [isVisible, setIsVisible] = useState<boolean>(false);
+  const [activeValue, setActiveValue] = useState<number | null>(null);
   useEffect(() => {
     setIsVisible(true);
   }, []);
 
-  const stats = [
-    { number: "50+", label: "Cours", icon: BookOpen },
-    { number: "1000+", label: "Étudiants", icon: Users },
-    { number: "98%", label: "Satisfaction", icon: Star },
-    { number: "24/7", label: "Support", icon: Heart },
+ 
+
+  // 🔹 4. Déclarer les constantes avec leurs types
+  const stats: Stat[] = [
+    { number: "5", label: "Phases par parcours", icon: BookOpen },
+    { number: "40+", label: "Leçons et bonus", icon: BookOpen },
+    { number: "5+", label: "Mini-projets pratiques", icon: Award },
+    { number: "100%", label: "Accès gratuit", icon: Heart },
   ];
 
-  const values = [
+  const values: Value[] = [
     {
       icon: Target,
       title: "Excellence",
-      description: "Des cours de haute qualité pour tous.",
+      description: "Parcours complets et structurés pour tous les niveaux.",
     },
     {
       icon: Zap,
       title: "Innovation",
-      description: "Technologies modernes pour apprendre.",
+      description: "Technologies modernes et contenus évolutifs.",
     },
     {
       icon: Heart,
       title: "Accessibilité",
-      description: "Cours gratuits pour tous.",
+      description: "Gratuit, sans inscription, pour tous.",
     },
     {
       icon: Lightbulb,
       title: "Pratique",
-      description: "Projets concrets pour maîtriser.",
+      description: "Mini-projets concrets pour une maîtrise rapide.",
     },
   ];
 
-  const milestones = [
+  const milestones: Milestone[] = [
     {
-      year: "2023",
-      title: "Lancement",
-      description: "Début avec les premiers cours web.",
+      year: "2025",
+      title: "Lancement de LuxiLearn",
+      description:
+        "Création de la plateforme avec un premier parcours complet en développement web.",
       icon: Play,
       status: "completed",
     },
     {
-      year: "2024",
-      title: "1000 Étudiants",
-      description: "Cap des 1000 étudiants atteint.",
-      icon: Users,
-      status: "completed",
-    },
-    {
-      year: "2024",
-      title: "Cours Avancés",
-      description: "Parcours React, Next.js, mobile.",
+      year: "2025",
+      title: "Parcours Avancés",
+      description:
+        "Ajout des phases JavaScript, React.js, Next.js et fullstack.",
       icon: Award,
       status: "completed",
     },
     {
       year: "2025",
-      title: "Expansion",
-      description: "Cours traduits, nouveaux marchés.",
+      title: "Expansion Future",
+      description:
+        "Planification de nouveaux parcours (IA, mobile, etc.) et enrichissement des contenus.",
       icon: TrendingUp,
       status: "current",
     },
@@ -94,7 +109,7 @@ const AboutPage = () => {
       whileInView={{ opacity: 1, scaleX: 1 }}
       transition={{ duration: 0.3 }}
       viewport={{ once: true }}
-      className="w-full h-0.5 sm:h-1 bg-red-600 border-t border-b border-black dark:border-white transform skew-x-2 max-w-5xl mx-auto"
+      className="w-full h-0.5 sm:h-1 bg-red-600 border-t border-b border-black dark:border-white transform skew-x-2 max-w-6xl mx-auto"
       aria-hidden="true"
     />
   );
@@ -102,7 +117,7 @@ const AboutPage = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 font-sans mx-4 sm:mx-6">
       {/* HERO SECTION */}
-      <div className="max-w-4xl mx-auto pt-32 ">
+      <div className="max-w-6xl mx-auto pt-32">
         <section className="grid lg:grid-cols-2 gap-6 sm:gap-8 pb-10">
           {/* Texte */}
           <motion.div
@@ -131,7 +146,8 @@ const AboutPage = () => {
             >
               Mission :{" "}
               <span className="text-red-600">Démocratiser l'apprentissage</span>{" "}
-              du web avec des cours gratuits et pratiques.
+              du développement web avec des parcours complets, gratuits et
+              accessibles sans inscription.
             </p>
 
             {/* Stats */}
@@ -145,7 +161,7 @@ const AboutPage = () => {
                   viewport={{ once: true }}
                   transition={{ duration: 0.3, delay: idx * 0.1 }}
                 >
-                  <stat.icon className="w-4 h-4 sm:w-5 h-5 text-red-600" />
+                  <stat.icon className="w-4 sm:w-5 h-5 text-red-600" />
                   <div className="text-xl sm:text-2xl font-black text-red-600">
                     {stat.number}
                   </div>
@@ -169,22 +185,25 @@ const AboutPage = () => {
               Philosophie
             </h3>
             <p className="text-xs sm:text-sm font-bold text-center">
-              "Apprendre en faisant" - Théorie et pratique intensive.
+              "Apprendre en faisant" - Parcours pratiques et structurés pour une
+              montée en compétences rapide.
             </p>
             <div className="grid grid-cols-1 gap-2 mt-3 w-full">
-              {["Cours pratiques", "Communauté", "Projets réels"].map(
-                (f, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center gap-2 border-2 border-black dark:border-white p-2 rounded-lg"
-                  >
-                    <div className="w-4 h-4 flex items-center justify-center border-2 border-red-600 text-red-600 font-black text-xs">
-                      ✓
-                    </div>
-                    <span className="text-xs sm:text-sm font-bold">{f}</span>
+              {[
+                "Parcours complets",
+                "Projets pratiques",
+                "Technologies modernes",
+              ].map((f, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-2 border-2 border-black dark:border-white p-2 rounded-lg"
+                >
+                  <div className="w-4 h-4 flex items-center justify-center border-2 border-red-600 text-red-600 font-black text-xs">
+                    ✓
                   </div>
-                )
-              )}
+                  <span className="text-xs sm:text-sm font-bold">{f}</span>
+                </div>
+              ))}
             </div>
           </motion.div>
         </section>
@@ -206,7 +225,7 @@ const AboutPage = () => {
                 activeValue === idx ? "-translate-y-0.5" : ""
               }`}
             >
-              <v.icon className="w-4 h-4 sm:w-5 h-5 text-red-600" />
+              <v.icon className="w-4  sm:w-5 h-5 text-red-600" />
               <h3 className="text-base sm:text-lg font-black uppercase tracking-wide">
                 {v.title}
               </h3>
@@ -270,7 +289,7 @@ const AboutPage = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.3, delay: idx * 0.1 }}
             >
-              <stat.icon className="w-4 h-4 sm:w-5 h-5 text-red-600" />
+              <stat.icon className="w-4  sm:w-5 h-5 text-red-600" />
               <div className="text-xl sm:text-2xl font-black text-red-600">
                 {stat.number}
               </div>
@@ -289,13 +308,14 @@ const AboutPage = () => {
             className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-wide mb-2"
             style={{ fontSize: "clamp(1.5rem, 4vw, 2rem)" }}
           >
-            Prêt à rejoindre ?
+            Prêt à apprendre ?
           </h2>
           <p
             className="text-sm sm:text-base font-bold text-center max-w-md sm:max-w-lg"
             style={{ fontSize: "clamp(0.75rem, 2vw, 0.875rem)" }}
           >
-            Rejoins des milliers d'étudiants pour transformer ta passion.
+            Plongez dans nos parcours complets et pratiques, accessibles
+            gratuitement sans inscription.
           </p>
           <div className="flex gap-4 sm:gap-6 flex-wrap justify-center">
             <motion.button
@@ -310,7 +330,7 @@ const AboutPage = () => {
               whileTap={{ scale: 0.98 }}
               className="border-2 border-black bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 font-bold uppercase px-4 sm:px-6 py-2 text-xs sm:text-sm tracking-wide hover:shadow-lg transition-all duration-200 rounded"
             >
-              Nos cours <BookOpen className="inline w-4 h-4 ml-1" />
+              Nos parcours <BookOpen className="inline w-4 h-4 ml-1" />
             </motion.button>
           </div>
         </section>

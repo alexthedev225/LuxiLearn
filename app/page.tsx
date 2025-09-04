@@ -1,7 +1,6 @@
 import AvailableCoursesSection from "./AvailableCoursesSection";
 import FaqSection from "./FaqSection";
 import { HeroSection } from "./HeroSection";
-import { PédagogieSection } from "./PédagogieSection";
 import WhyLuxiDev from "./WhyLuxiDev";
 
 export default async function Home() {
@@ -28,26 +27,22 @@ export default async function Home() {
   ];
 
   return (
-    <div className="  relative w-full min-h-screen flex flex-col overflow-hidden bg-white dark:bg-black text-black dark:text-white  space-y-12">
-      <main className="flex-1 overflow-y-auto  border-black dark:border-white py-32">
+    <div className="relative w-full min-h-screen flex flex-col bg-white dark:bg-black text-black dark:text-white space-y-12">
+      <main className="flex-1 py-32 ">
         {/* Hero */}
         <HeroSection />
 
         {/* Separator */}
-        <div className="border-t-2 border-black dark:border-white" />
-
-        {/* <PédagogieSection /> */}
-{/* 
-        <div className="border-t-2 border-black dark:border-white" /> */}
+        <div className="w-full h-0.5 sm:h-1 bg-red-600 border-t border-b border-black dark:border-white max-w-6xl mx-auto my-8" />
 
         <AvailableCoursesSection />
 
-        <div className="border-t-2 border-black dark:border-white" />
+        <div className="w-full h-0.5 sm:h-1 bg-red-600 border-t border-b border-black dark:border-white max-w-6xl mx-auto my-8" />
 
         {/* Pourquoi LuxiDev */}
         <WhyLuxiDev />
 
-        <div className="border-t-2 border-black dark:border-white" />
+        <div className="w-full h-0.5 sm:h-1 bg-red-600 border-t border-b border-black dark:border-white max-w-6xl mx-auto my-8" />
 
         {/* FAQ */}
         <FaqSection faqs={faqs} />

@@ -2,36 +2,59 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
 import { BookOpen, Clock, Plus, Trash, ArrowLeft, Check } from "lucide-react";
+import { Editor as ToastEditor } from "@toast-ui/react-editor";
 
-// Dynamically import Toast UI Editor
-const Editor = dynamic(
-  () => import("@toast-ui/react-editor").then((mod) => mod.Editor),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="h-[300px] bg-white dark:bg-black border-2 border-black dark:border-white p-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-red-600 mx-auto mb-4"></div>
-          <p className="font-bold text-black dark:text-white tracking-wide">
-            CHARGEMENT DE L'ÉDITEUR...
-          </p>
-        </div>
-      </div>
-    ),
-  }
-);
+// Types pour l'exercice
+type Exercise = {
+  title: string;
+  prompt: string;
+  solution: string;
+  validateCode: string;
+};
 
-// ToastMarkdownEditor component
-function ToastMarkdownEditor({ value, onChange }) {
-  const editorRef = React.useRef();
+// Types pour les quiz
+type Quiz = {
+  question: string;
+  options: string[];
+  correctAnswer: number | null;
+};
+
+// Type pour la leçon
+type Lesson = {
+  courseSlug: string;
+  title: string;
+  description: string;
+  duration: string;
+  slug: string;
+  content: string;
+  exercise: Exercise;
+  quizzes: Quiz[];
+};
+
+// Type pour les cours récupérés depuis l'API
+type Course = {
+  id: string;
+  title: string;
+  slug: string;
+};
+
+type ToastMarkdownEditorProps = {
+  value: string;
+  onChange: (val: string) => void;
+};
+
+function ToastMarkdownEditor({ value, onChange }: ToastMarkdownEditorProps) {
+  const editorRef = useRef<ToastEditor | null>(null);
 
   const handleChange = () => {
-    const markdown = editorRef.current?.getInstance().getMarkdown();
-    onChange(markdown);
+    const editorInstance = editorRef.current?.getInstance();
+    if (editorInstance) {
+      const markdown = editorInstance.getMarkdown();
+      onChange(markdown);
+    }
   };
 
   useEffect(() => {
@@ -40,14 +63,14 @@ function ToastMarkdownEditor({ value, onChange }) {
 
   return (
     <div className="border-2 border-black dark:border-white">
-      <Editor
+      <ToastEditor
+        ref={editorRef}
         initialValue={value}
         previewStyle="vertical"
-        height="300px"
+        height="700px"
         initialEditType="markdown"
-        useCommandShortcut={true}
+        useCommandShortcut
         onChange={handleChange}
-        ref={editorRef}
       />
     </div>
   );
@@ -56,7 +79,7 @@ function ToastMarkdownEditor({ value, onChange }) {
 // Main Lesson Form Component
 export default function LessonForm() {
   const router = useRouter();
-  const [lesson, setLesson] = useState({
+  const [lesson, setLesson] = useState<Lesson>({
     courseSlug: "",
     title: "",
     description: "",
@@ -66,9 +89,10 @@ export default function LessonForm() {
     exercise: { title: "", prompt: "", solution: "", validateCode: "" },
     quizzes: [],
   });
-  const [courses, setCourses] = useState([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
+
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
   // Fetch available courses for the dropdown
   useEffect(() => {
@@ -86,19 +110,6 @@ export default function LessonForm() {
     fetchCourses();
   }, []);
 
-  // Update lesson fields
-  const updateLesson = (newData) => {
-    setLesson((prev) => ({ ...prev, ...newData }));
-  };
-
-  // Update exercise fields
-  const updateExercise = (newData) => {
-    setLesson((prev) => ({
-      ...prev,
-      exercise: { ...(prev.exercise || {}), ...newData },
-    }));
-  };
-
   // Add a new quiz
   const addQuiz = () => {
     setLesson((prev) => ({
@@ -111,7 +122,7 @@ export default function LessonForm() {
   };
 
   // Update a quiz
-  const updateQuiz = (quizIndex, newData) => {
+  const updateQuiz = (quizIndex: number, newData: Partial<Quiz>) => {
     setLesson((prev) => {
       const newQuizzes = [...prev.quizzes];
       newQuizzes[quizIndex] = { ...newQuizzes[quizIndex], ...newData };
@@ -120,7 +131,7 @@ export default function LessonForm() {
   };
 
   // Add a quiz option
-  const addQuizOption = (quizIndex) => {
+  const addQuizOption = (quizIndex: number) => {
     setLesson((prev) => {
       const newQuizzes = [...prev.quizzes];
       newQuizzes[quizIndex].options.push("");
@@ -129,7 +140,11 @@ export default function LessonForm() {
   };
 
   // Update a quiz option
-  const updateQuizOption = (quizIndex, optionIndex, value) => {
+  const updateQuizOption = (
+    quizIndex: number,
+    optionIndex: number,
+    value: string
+  ) => {
     setLesson((prev) => {
       const newQuizzes = [...prev.quizzes];
       newQuizzes[quizIndex].options[optionIndex] = value;
@@ -138,7 +153,7 @@ export default function LessonForm() {
   };
 
   // Remove a quiz option
-  const removeQuizOption = (quizIndex, optionIndex) => {
+  const removeQuizOption = (quizIndex: number, optionIndex: number) => {
     setLesson((prev) => {
       const newQuizzes = [...prev.quizzes];
       newQuizzes[quizIndex].options.splice(optionIndex, 1);
@@ -147,15 +162,26 @@ export default function LessonForm() {
   };
 
   // Remove a quiz
-  const removeQuiz = (quizIndex) => {
+  const removeQuiz = (quizIndex: number) => {
     setLesson((prev) => {
       const newQuizzes = prev.quizzes.filter((_, i) => i !== quizIndex);
       return { ...prev, quizzes: newQuizzes };
     });
   };
+  // Mettre juste après la déclaration du state lesson
+  const updateLesson = (newData: Partial<Lesson>) => {
+    setLesson((prev) => ({ ...prev, ...newData }));
+  };
+
+  const updateExercise = (newData: Partial<Exercise>) => {
+    setLesson((prev) => ({
+      ...prev,
+      exercise: { ...(prev.exercise || {}), ...newData },
+    }));
+  };
 
   // Handle form submission
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!lesson.title || !lesson.slug || !lesson.courseSlug) {
       setError(
@@ -192,14 +218,18 @@ export default function LessonForm() {
 
       if (!res.ok) {
         const errorText = await res.text();
-        throw new Error(errorText || "ERREUR LORS DE LA CRÉATION DE LA LEÇON");
+        throw new Error(errorText || "ERREUR LORS DE LA  DE LA LEÇON");
       }
 
       alert("LEÇON CRÉÉE AVEC SUCCÈS !");
       router.push(`/courses/${lesson.courseSlug}`);
-    } catch (err) {
-      setError(err.message || "ERREUR LORS DE LA CRÉATION DE LA LEÇON");
+    } catch (err: unknown) {
       console.error(err);
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("ERREUR LORS DE LA CRÉATION DE LA LEÇON");
+      }
     } finally {
       setIsSubmitting(false);
     }

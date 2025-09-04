@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+
+import React, { useState, useEffect, useRef, ReactNode } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -14,15 +15,32 @@ import {
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 
-const AdminLayout = ({ children }) => {
-  const [darkMode, setDarkMode] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [expandedMenu, setExpandedMenu] = useState(null);
-  const [closingMenu, setClosingMenu] = useState(false);
-  const menuRef = useRef(null);
-  const pathname = usePathname();
+type NavSubItem = {
+  label: string;
+  path: string;
+  icon: React.ComponentType<{ className?: string }>;
+};
 
-  const navItems = [
+type NavItem = {
+  label: string;
+  path: string;
+  icon: React.ComponentType<{ className?: string }>;
+  subItems?: NavSubItem[];
+};
+
+interface AdminLayoutProps {
+  children: ReactNode;
+}
+
+export default function AdminLayout({ children }: AdminLayoutProps) {
+  const [darkMode, setDarkMode] = useState<boolean>(false);
+  const [menuOpen, setMenuOpen] = useState<boolean>(false);
+  const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
+  const [closingMenu, setClosingMenu] = useState<boolean>(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const pathname = usePathname() ?? "";
+
+  const navItems: NavItem[] = [
     { label: "Dashboard", path: "/admin", icon: BarChart3 },
     {
       label: "Cours",
@@ -44,7 +62,7 @@ const AdminLayout = ({ children }) => {
     },
   ];
 
-  const toggleSubMenu = (label) => {
+  const toggleSubMenu = (label: string) => {
     if (expandedMenu === label) {
       setClosingMenu(true);
       setTimeout(() => {
@@ -60,7 +78,7 @@ const AdminLayout = ({ children }) => {
     try {
       const res = await fetch("/api/auth/logout", { method: "POST" });
       if (res.ok) {
-        window.location.href = "/"; // redirige vers menu principal
+        window.location.href = "/";
       } else {
         console.error("Erreur lors de la déconnexion");
       }
@@ -70,8 +88,8 @@ const AdminLayout = ({ children }) => {
   };
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setClosingMenu(true);
         setTimeout(() => {
           setExpandedMenu(null);
@@ -85,7 +103,9 @@ const AdminLayout = ({ children }) => {
 
   return (
     <div
-      className={`${darkMode ? "dark" : ""} min-h-screen bg-white dark:bg-black text-black dark:text-white `}
+      className={`${
+        darkMode ? "dark" : ""
+      } min-h-screen bg-white dark:bg-black text-black dark:text-white`}
     >
       {/* Top Bar */}
       <motion.header
@@ -114,22 +134,28 @@ const AdminLayout = ({ children }) => {
             const Icon = item.icon;
             const isExpanded = expandedMenu === item.label;
             return (
-              <div key={item.path} className="relative">
+              <div key={item.path} className="relative" ref={menuRef}>
                 {item.subItems ? (
                   <button
                     className="flex items-center gap-2 px-3 py-2 border-2 border-black dark:border-white font-bold uppercase tracking-wide text-sm hover:translate-y-[-1px] transition-transform duration-200"
                     onClick={() => toggleSubMenu(item.label)}
                   >
                     <Icon
-                      className={`${isActive ? "text-red-600" : "text-black dark:text-white"}`}
+                      className={`${
+                        isActive ? "text-red-600" : "text-black dark:text-white"
+                      }`}
                     />
                     <span
-                      className={`${isActive ? "text-red-600" : "text-black dark:text-white"}`}
+                      className={`${
+                        isActive ? "text-red-600" : "text-black dark:text-white"
+                      }`}
                     >
                       {item.label}
                     </span>
                     <ChevronDown
-                      className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                      className={`w-4 h-4 transition-transform ${
+                        isExpanded ? "rotate-180" : ""
+                      }`}
                     />
                   </button>
                 ) : (
@@ -138,10 +164,14 @@ const AdminLayout = ({ children }) => {
                     className="flex items-center gap-2 px-3 py-2 border-2 border-black dark:border-white font-bold uppercase tracking-wide text-sm hover:translate-y-[-1px] transition-transform duration-200"
                   >
                     <Icon
-                      className={`${isActive ? "text-red-600" : "text-black dark:text-white"}`}
+                      className={`${
+                        isActive ? "text-red-600" : "text-black dark:text-white"
+                      }`}
                     />
                     <span
-                      className={`${isActive ? "text-red-600" : "text-black dark:text-white"}`}
+                      className={`${
+                        isActive ? "text-red-600" : "text-black dark:text-white"
+                      }`}
                     >
                       {item.label}
                     </span>
@@ -186,13 +216,15 @@ const AdminLayout = ({ children }) => {
             );
           })}
         </nav>
-        {/* Bouton Logout desktop en rouge */}
+
+        {/* Bouton Logout desktop */}
         <button
           onClick={handleLogout}
           className="hidden lg:flex items-center gap-2 px-3 py-2 border-2 border-red-600 text-red-600 font-bold uppercase tracking-wide text-sm hover:bg-red-600 hover:text-white transition-colors duration-200"
         >
           <LogOut className="w-5 h-5" />
         </button>
+
         {/* Hamburger mobile */}
         <button
           className="lg:hidden p-2 border-2 border-black dark:border-white rounded"
@@ -274,6 +306,7 @@ const AdminLayout = ({ children }) => {
                   </div>
                 );
               })}
+
               {/* Bouton Logout mobile */}
               <button
                 onClick={handleLogout}
@@ -300,6 +333,4 @@ const AdminLayout = ({ children }) => {
       </main>
     </div>
   );
-};
-
-export default AdminLayout;
+}

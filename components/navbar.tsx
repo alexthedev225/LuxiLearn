@@ -12,13 +12,14 @@ const links = [
   { href: "/contact", label: "Contact" },
 ];
 
-// Neo-Brutalist Separator for Mobile Menu
+// Neo-Brutalist Separator
 const Separator = () => (
   <motion.div
     initial={{ opacity: 0, scaleX: 0 }}
-    animate={{ opacity: 1, scaleX: 1 }}
-    transition={{ duration: 0.2 }}
-    className="w-full h-px sm:h-0.5 bg-red-600 border-t border-b border-black dark:border-white transform skew-x-2"
+    whileInView={{ opacity: 1, scaleX: 1 }}
+    transition={{ duration: 0.3 }}
+    viewport={{ once: true }}
+    className="w-full h-0.5 sm:h-1 bg-red-600 border-t border-b border-black dark:border-white transform skew-x-2 max-w-6xl mx-auto"
     aria-hidden="true"
   />
 );
@@ -31,9 +32,9 @@ export default function Navbar() {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-neutral-950 border-b-2 border-black dark:border-white"
+      className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-neutral-950 "
     >
-      <nav className="max-w-4xl mx-auto py-2 sm:py-3 flex items-center justify-between gap-2 sm:gap-4 ">
+      <nav className="max-w-6xl mx-auto py-2 sm:py-3 flex items-center justify-between gap-2 sm:gap-4 ">
         {/* Logo */}
         <div className="flex items-center">
           <Link
@@ -76,7 +77,7 @@ export default function Navbar() {
           </button>
         </div>
       </nav>
-
+      <Separator />
       {/* Mobile Menu */}
       <AnimatePresence>
         {mobileMenuOpen && (

@@ -5,43 +5,97 @@ import { motion, useInView } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
 import {
   BookOpen,
-  Clock,
-  Plus,
-  ArrowRight,
   TrendingUp,
-  Calendar,
   FileText,
-  BarChart3,
-  Eye,
-  Edit,
   ChevronRight,
   Activity,
 } from "lucide-react";
+
+// -------------------- TYPES --------------------
+// types.ts
+export type Lesson = {
+  id: number;
+  title: string;
+  slug: string;
+  createdAt: Date;
+  duration?: string;
+};
+
+export type Course = {
+  id: number;
+  title: string;
+  slug: string;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: number;
+  description: string;
+  level: string;
+  technologies: string[];
+  lessons?: Lesson[];
+};
+
+
+type Stat = {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  value: number;
+  subtitle: string;
+  isImportant: boolean;
+};
+
+type Action = {
+  title: string;
+  description: string;
+  href: string;
+  isPrimary: boolean;
+};
+
+type RecentItemProps = {
+  title: string;
+  subtitle?: string;
+  date: string;
+  href: string;
+};
+
+type StatCardProps = {
+  stat: Stat;
+  index: number;
+};
+
+type ActionButtonProps = {
+  action: Action;
+  index: number;
+};
+
+type RecentItemComponentProps = {
+  item: RecentItemProps;
+  type: "course" | "lesson";
+  index: number;
+};
+
+type AdminDashboardProps = {
+  courses?: Course[];
+  totalCourses?: number;
+  totalLessons?: number;
+};
+
+// -------------------- COMPONENTS --------------------
 
 // Animated Background Dots
 const BackgroundDots = () => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none">
     <motion.div
-      animate={{
-        scale: [1, 1.2, 1],
-        opacity: [0.3, 0.6, 0.3],
-      }}
+      animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
       transition={{ duration: 4, repeat: Infinity }}
       className="absolute top-1/4 left-1/6 w-2 h-2 bg-white dark:bg-white rounded-full"
     />
     <motion.div
-      animate={{
-        scale: [1, 1.5, 1],
-        opacity: [0.2, 0.5, 0.2],
-      }}
+      animate={{ scale: [1, 1.5, 1], opacity: [0.2, 0.5, 0.2] }}
       transition={{ duration: 6, repeat: Infinity, delay: 1 }}
       className="absolute top-3/4 right-1/4 w-1 h-1 bg-white dark:bg-white rounded-full"
     />
     <motion.div
-      animate={{
-        scale: [1, 1.3, 1],
-        opacity: [0.4, 0.7, 0.4],
-      }}
+      animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.7, 0.4] }}
       transition={{ duration: 5, repeat: Infinity, delay: 2 }}
       className="absolute bottom-1/3 left-3/4 w-1.5 h-1.5 bg-white dark:bg-white rounded-full"
     />
@@ -49,8 +103,8 @@ const BackgroundDots = () => (
 );
 
 // Statistics Card Component
-const StatCard = ({ stat, index }) => {
-  const cardRef = useRef(null);
+const StatCard: React.FC<StatCardProps> = ({ stat, index }) => {
+  const cardRef = useRef<HTMLDivElement | null>(null);
   const isInView = useInView(cardRef, { once: true, margin: "-50px" });
 
   return (
@@ -63,29 +117,19 @@ const StatCard = ({ stat, index }) => {
         delay: index * 0.15,
         ease: [0.25, 0.46, 0.45, 0.94],
       }}
-      whileHover={{
-        y: -4,
-        transition: { duration: 0.2 },
-      }}
+      whileHover={{ y: -4, transition: { duration: 0.2 } }}
       className="relative bg-white dark:bg-black border-2 border-black dark:border-white rounded-none p-8 group cursor-pointer overflow-hidden"
     >
-      {/* Top accent line - only red for important stats */}
       <div
         className={`absolute top-0 left-0 w-full h-1 ${
           stat.isImportant ? "bg-red-600" : "bg-black dark:bg-white"
         }`}
       />
-
-      {/* Icon */}
       <div className="mb-6">
         <stat.icon
-          className={`w-8 h-8 ${
-            stat.isImportant ? "text-red-600" : "text-black dark:text-white"
-          }`}
+          className={`w-8 h-8 ${stat.isImportant ? "text-red-600" : "text-black dark:text-white"}`}
         />
       </div>
-
-      {/* Content */}
       <div>
         <motion.h3
           className="text-4xl font-black text-black dark:text-white mb-2"
@@ -102,8 +146,6 @@ const StatCard = ({ stat, index }) => {
           {stat.subtitle}
         </p>
       </div>
-
-      {/* Hover effect */}
       <motion.div
         className="absolute inset-0 bg-black dark:bg-white opacity-0 group-hover:opacity-5 transition-opacity duration-300"
         initial={false}
@@ -113,7 +155,7 @@ const StatCard = ({ stat, index }) => {
 };
 
 // Action Button Component
-const ActionButton = ({ action, index }) => (
+const ActionButton: React.FC<ActionButtonProps> = ({ action, index }) => (
   <motion.div
     initial={{ opacity: 0, x: -30 }}
     animate={{ opacity: 1, x: 0 }}
@@ -146,14 +188,10 @@ const ActionButton = ({ action, index }) => (
           </div>
           <motion.div whileHover={{ x: 4 }} className="ml-4">
             <ChevronRight
-              className={`w-6 h-6 ${
-                action.isPrimary ? "text-white" : "text-black dark:text-white"
-              }`}
+              className={`w-6 h-6 ${action.isPrimary ? "text-white" : "text-black dark:text-white"}`}
             />
           </motion.div>
         </div>
-
-        {/* Subtle hover overlay for non-primary buttons */}
         {!action.isPrimary && (
           <motion.div
             className="absolute inset-0 bg-black dark:bg-white opacity-0 group-hover:opacity-5 transition-opacity duration-200"
@@ -166,50 +204,42 @@ const ActionButton = ({ action, index }) => (
 );
 
 // Recent Item Component
-const RecentItem = ({ item, type, index }) => (
-  <motion.div
-    initial={{ opacity: 0, x: -20 }}
-    animate={{ opacity: 1, x: 0 }}
-    transition={{ delay: index * 0.08 }}
-  >
-    <Link href={item.href}>
-      <motion.div
-        whileHover={{ x: 6, backgroundColor: "rgba(0, 0, 0, 0.02)" }}
-        className="group flex items-center justify-between p-4 border-b border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 transition-all duration-200 cursor-pointer"
-      >
-        <div className="flex items-center gap-4 flex-1 min-w-0">
-          <div
-            className={`w-3 h-3 rounded-full flex-shrink-0 ${
-              type === "course" ? "bg-red-600" : "bg-black dark:bg-white"
-            }`}
-          />
-
-          <div className="flex-1 min-w-0">
-            <h4 className="font-bold text-black dark:text-white truncate text-lg">
-              {item.title}
-            </h4>
-            {item.subtitle && (
-              <p className="text-sm text-black/60 dark:text-white/60 font-medium truncate">
-                {item.subtitle}
-              </p>
-            )}
-          </div>
+const RecentItem: React.FC<RecentItemComponentProps> = ({ item, type }) => (
+  <Link href={item.href}>
+    <motion.div
+      whileHover={{ x: 6, backgroundColor: "rgba(0, 0, 0, 0.02)" }}
+      className="group flex items-center justify-between p-4 border-b border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 transition-all duration-200 cursor-pointer"
+    >
+      <div className="flex items-center gap-4 flex-1 min-w-0">
+        <div
+          className={`w-3 h-3 rounded-full flex-shrink-0 ${
+            type === "course" ? "bg-red-600" : "bg-black dark:bg-white"
+          }`}
+        />
+        <div className="flex-1 min-w-0">
+          <h4 className="font-bold text-black dark:text-white truncate text-lg">
+            {item.title}
+          </h4>
+          {item.subtitle && (
+            <p className="text-sm text-black/60 dark:text-white/60 font-medium truncate">
+              {item.subtitle}
+            </p>
+          )}
         </div>
-
-        <div className="flex items-center gap-3 ml-4 flex-shrink-0">
-          <span className="text-xs text-black/50 dark:text-white/50 font-mono">
-            {item.date}
-          </span>
-          <ChevronRight className="w-4 h-4 text-black/40 dark:text-white/40 group-hover:text-black dark:group-hover:text-white transition-colors" />
-        </div>
-      </motion.div>
-    </Link>
-  </motion.div>
+      </div>
+      <div className="flex items-center gap-3 ml-4 flex-shrink-0">
+        <span className="text-xs text-black/50 dark:text-white/50 font-mono">
+          {item.date}
+        </span>
+        <ChevronRight className="w-4 h-4 text-black/40 dark:text-white/40 group-hover:text-black dark:group-hover:text-white transition-colors" />
+      </div>
+    </motion.div>
+  </Link>
 );
 
 // Quick Actions Component
-const QuickActions = () => {
-  const actions = [
+const QuickActions: React.FC = () => {
+  const actions: Action[] = [
     {
       title: "Créer un cours",
       description: "Nouveau parcours de formation",
@@ -223,7 +253,6 @@ const QuickActions = () => {
       isPrimary: false,
     },
   ];
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {actions.map((action, index) => (
@@ -233,29 +262,25 @@ const QuickActions = () => {
   );
 };
 
-// Main component
-export default function AdminDashboardPageClient({
+// -------------------- MAIN COMPONENT --------------------
+const AdminDashboardPageClient: React.FC<AdminDashboardProps> = ({
   courses = [],
   totalCourses = 0,
   totalLessons = 0,
-}) {
+}) => {
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
+  useEffect(() => setMounted(true), []);
   if (!mounted) return null;
 
-  // Prepare statistics data
-  const stats = [
+  const stats: Stat[] = [
     {
       icon: BookOpen,
       title: "Cours",
       value: totalCourses,
       subtitle:
         totalCourses > 1 ? "Parcours disponibles" : "Parcours disponible",
-      isImportant: true, // Primary stat
+      isImportant: true,
     },
     {
       icon: FileText,
@@ -287,9 +312,11 @@ export default function AdminDashboardPageClient({
     },
   ];
 
-  // Prepare recent data
   const recentCourses = courses
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
     .slice(0, 6)
     .map((course) => ({
       title: course.title,
@@ -301,33 +328,31 @@ export default function AdminDashboardPageClient({
       href: `/admin/courses/${course.slug}`,
     }));
 
-  const allLessons = courses.flatMap((course) =>
-    (course.lessons || []).map((lesson) => ({
-      title: lesson.title,
-      subtitle: course.title,
-      date: new Date(lesson.createdAt).toLocaleDateString("fr-FR", {
-        day: "2-digit",
-        month: "2-digit",
-      }),
-      href: `/admin/lessons/${lesson.slug}`,
-    }))
-  );
-
-  const recentLessons = allLessons
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  const recentLessons = courses
+    .flatMap(
+      (course) =>
+        course.lessons?.map((lesson) => ({
+          title: lesson.title,
+          subtitle: course.title,
+          date: new Date(lesson.createdAt).toLocaleDateString("fr-FR", {
+            day: "2-digit",
+            month: "2-digit",
+          }),
+          href: `/admin/lessons/${lesson.slug}`,
+        })) || []
+    )
     .slice(0, 6);
 
   return (
-    <div className="max-w-5xl mx-auto min-h-screen bg-white dark:bg-black text-black dark:text-white relative ">
+    <div className="max-w-5xl mx-auto min-h-screen bg-white dark:bg-black text-black dark:text-white relative">
       <BackgroundDots />
 
       {/* Header */}
-      <section className="pt-16 pb-12 ">
+      <section className="pt-16 pb-12">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-         
         >
           <h1 className="text-5xl lg:text-7xl font-black uppercase tracking-tight mb-4">
             Dashboard
@@ -340,129 +365,121 @@ export default function AdminDashboardPageClient({
       </section>
 
       {/* Statistics */}
-      <section className="pb-16 ">
-        <div >
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-12"
-          >
-            <h2 className="text-2xl font-black uppercase tracking-wide mb-2">
-              Statistiques
-            </h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {stats.map((stat, index) => (
-              <StatCard key={stat.title} stat={stat} index={index} />
-            ))}
-          </div>
+      <section className="pb-16">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="mb-12"
+        >
+          <h2 className="text-2xl font-black uppercase tracking-wide mb-2">
+            Statistiques
+          </h2>
+        </motion.div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {stats.map((stat, index) => (
+            <StatCard key={stat.title} stat={stat} index={index} />
+          ))}
         </div>
       </section>
 
       {/* Quick Actions */}
-      <section className="pb-16 ">
-        <div >
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="mb-12"
-          >
-            <h2 className="text-2xl font-black uppercase tracking-wide mb-2">
-              Actions
-            </h2>
-          </motion.div>
-
-          <QuickActions />
-        </div>
+      <section className="pb-16">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="mb-12"
+        >
+          <h2 className="text-2xl font-black uppercase tracking-wide mb-2">
+            Actions
+          </h2>
+        </motion.div>
+        <QuickActions />
       </section>
 
       {/* Recent Content */}
-      <section className="pb-20 ">
-        <div >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Recent Courses */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-            >
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-black uppercase tracking-wide">
-                  Cours récents
-                </h2>
-                <Link
-                  href="/admin/courses"
-                  className="text-sm font-bold text-red-600 hover:text-red-700 transition-colors uppercase tracking-wide"
-                >
-                  Voir tout
-                </Link>
-              </div>
+      <section className="pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {/* Recent Courses */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-black uppercase tracking-wide">
+                Cours récents
+              </h2>
+              <Link
+                href="/admin/courses"
+                className="text-sm font-bold text-red-600 hover:text-red-700 transition-colors uppercase tracking-wide"
+              >
+                Voir tout
+              </Link>
+            </div>
+            <div className="bg-white dark:bg-black border-2 border-black dark:border-white rounded-none">
+              {recentCourses.length ? (
+                recentCourses.map((course, index) => (
+                  <RecentItem
+                    key={`course-${index}`}
+                    item={course}
+                    type="course"
+                    index={index}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-16">
+                  <BookOpen className="w-12 h-12 mx-auto mb-4 text-black/20 dark:text-white/20" />
+                  <p className="font-medium text-black/50 dark:text-white/50">
+                    Aucun cours créé
+                  </p>
+                </div>
+              )}
+            </div>
+          </motion.div>
 
-              <div className="bg-white dark:bg-black border-2 border-black dark:border-white rounded-none">
-                {recentCourses.length > 0 ? (
-                  recentCourses.map((course, index) => (
-                    <RecentItem
-                      key={`course-${index}`}
-                      item={course}
-                      type="course"
-                      index={index}
-                    />
-                  ))
-                ) : (
-                  <div className="text-center py-16">
-                    <BookOpen className="w-12 h-12 mx-auto mb-4 text-black/20 dark:text-white/20" />
-                    <p className="font-medium text-black/50 dark:text-white/50">
-                      Aucun cours créé
-                    </p>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-
-            {/* Recent Lessons */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
-            >
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-black uppercase tracking-wide">
-                  Leçons récentes
-                </h2>
-                <Link
-                  href="/admin/lessons"
-                  className="text-sm font-bold text-black dark:text-white hover:text-black/70 dark:hover:text-white/70 transition-colors uppercase tracking-wide"
-                >
-                  Voir tout
-                </Link>
-              </div>
-
-              <div className="bg-white dark:bg-black border-2 border-black dark:border-white rounded-none">
-                {recentLessons.length > 0 ? (
-                  recentLessons.map((lesson, index) => (
-                    <RecentItem
-                      key={`lesson-${index}`}
-                      item={lesson}
-                      type="lesson"
-                      index={index}
-                    />
-                  ))
-                ) : (
-                  <div className="text-center py-16">
-                    <FileText className="w-12 h-12 mx-auto mb-4 text-black/20 dark:text-white/20" />
-                    <p className="font-medium text-black/50 dark:text-white/50">
-                      Aucune leçon créée
-                    </p>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </div>
+          {/* Recent Lessons */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+          >
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-black uppercase tracking-wide">
+                Leçons récentes
+              </h2>
+              <Link
+                href="/admin/lessons"
+                className="text-sm font-bold text-black dark:text-white hover:text-black/70 dark:hover:text-white/70 transition-colors uppercase tracking-wide"
+              >
+                Voir tout
+              </Link>
+            </div>
+            <div className="bg-white dark:bg-black border-2 border-black dark:border-white rounded-none">
+              {recentLessons.length ? (
+                recentLessons.map((lesson, index) => (
+                  <RecentItem
+                    key={`lesson-${index}`}
+                    item={lesson}
+                    type="lesson"
+                    index={index}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-16">
+                  <FileText className="w-12 h-12 mx-auto mb-4 text-black/20 dark:text-white/20" />
+                  <p className="font-medium text-black/50 dark:text-white/50">
+                    Aucune leçon créée
+                  </p>
+                </div>
+              )}
+            </div>
+          </motion.div>
         </div>
       </section>
     </div>
   );
-}
+};
+
+export default AdminDashboardPageClient;

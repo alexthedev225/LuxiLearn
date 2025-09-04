@@ -1,33 +1,17 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, FocusEvent } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 
-const FloatingElements = () => (
-  <div
-    className="absolute inset-0 overflow-hidden pointer-events-none"
-    aria-hidden="true"
-  >
-    <motion.div
-      className="absolute w-32 h-32 bg-red-600/20 dark:bg-red-600/30 rounded-full"
-      animate={{ x: [0, 50, 0], y: [0, 25, 0], rotate: [0, 180, 360] }}
-      transition={{ duration: 15, repeat: Infinity, repeatType: "mirror" }}
-      style={{ top: "10%", left: "5%" }}
-    />
-    <motion.div
-      className="absolute w-48 h-48 bg-red-600/20 dark:bg-red-600/30 rounded-full"
-      animate={{ x: [0, -40, 0], y: [0, 50, 0], rotate: [360, 180, 0] }}
-      transition={{ duration: 20, repeat: Infinity, repeatType: "mirror" }}
-      style={{ bottom: "10%", right: "10%" }}
-    />
-    <motion.div
-      className="absolute w-24 h-24 bg-red-600/20 dark:bg-red-600/30 rounded-full"
-      animate={{ x: [0, 30, 0], y: [0, -15, 0], scale: [1, 1.02, 1] }}
-      transition={{ duration: 10, repeat: Infinity, repeatType: "mirror" }}
-      style={{ top: "50%", right: "30%" }}
-    />
-  </div>
-);
+// Types
+type FormData = {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  type: "general" | "support" | "feedback";
+};
+type FocusedField = keyof FormData | null;
 
 // Neo-Brutalist Separator
 const Separator = () => (
@@ -36,38 +20,41 @@ const Separator = () => (
     whileInView={{ opacity: 1, scaleX: 1 }}
     transition={{ duration: 0.3 }}
     viewport={{ once: true }}
-    className="w-full h-0.5 sm:h-1 bg-red-600 border-t border-b border-black dark:border-white transform skew-x-2 max-w-5xl mx-auto"
+    className="w-full h-0.5 sm:h-1 bg-red-600 border-t border-b border-black dark:border-white transform skew-x-2 max-w-6xl mx-auto"
     aria-hidden="true"
   />
 );
 
 export default function ImmersiveContactSection() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     name: "",
     email: "",
     subject: "",
     message: "",
     type: "general",
   });
-  const [submitted, setSubmitted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [focusedField, setFocusedField] = useState(null);
+  const [submitted, setSubmitted] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [focusedField, setFocusedField] = useState<FocusedField>(null);
 
-  const headerRef = useRef(null);
-  const formRef = useRef(null);
+  const headerRef = useRef<HTMLDivElement | null>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
 
   const headerInView = useInView(headerRef, { once: true });
   const formInView = useInView(formRef, { once: true, margin: "-50px" });
 
-  const handleChange = (e) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    // Simulate network request
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     console.log("Form submitted:", formData);
@@ -92,14 +79,10 @@ export default function ImmersiveContactSection() {
   }, [submitted]);
 
   return (
-    <div className="relative min-h-screen bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100  mx-4 sm:mx-6">
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <FloatingElements />
-      </div>
-
-      <div className="relative z-10 max-w-4xl mx-auto">
+    <div className="relative min-h-screen bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 mx-4 sm:mx-6">
+      <div className="relative z-10 max-w-6xl mx-auto">
         {/* Header */}
-        <motion.section ref={headerRef} className=" pb-10 pt-30">
+        <motion.section ref={headerRef} className="pb-10 pt-30">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={headerInView ? { opacity: 1, y: 0 } : {}}
@@ -121,7 +104,7 @@ export default function ImmersiveContactSection() {
             className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-wide mb-3 sm:mb-4"
             style={{ fontSize: "clamp(1.5rem, 4vw, 2rem)" }}
           >
-            Parlez-nous de votre projet
+            Contactez l'équipe <span className="text-red-600">LuxiLearn</span>
           </motion.h1>
 
           <motion.p
@@ -131,7 +114,8 @@ export default function ImmersiveContactSection() {
             className="text-sm sm:text-base font-bold max-w-md sm:max-w-lg"
             style={{ fontSize: "clamp(0.75rem, 2vw, 0.875rem)" }}
           >
-            Une question ou un projet ? Notre équipe est là.
+            Une question sur nos parcours ou une suggestion pour améliorer
+            LuxiLearn ? Contactez-nous !
           </motion.p>
         </motion.section>
 
@@ -164,9 +148,9 @@ export default function ImmersiveContactSection() {
                     <input
                       type={field === "email" ? "email" : "text"}
                       name={field}
-                      value={formData[field]}
+                      value={formData[field as keyof FormData]}
                       onChange={handleChange}
-                      onFocus={() => setFocusedField(field)}
+                      onFocus={() => setFocusedField(field as FocusedField)}
                       onBlur={() => setFocusedField(null)}
                       required
                       className="w-full border-2 border-black dark:border-white p-2 sm:p-3 font-bold uppercase text-xs sm:text-sm bg-white dark:bg-neutral-950 rounded"

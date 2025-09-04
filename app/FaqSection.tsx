@@ -4,7 +4,16 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, HelpCircle } from "lucide-react";
 
-const defaultFaqs = [
+type Faq = {
+  question: string;
+  answer: string;
+};
+
+type FaqSectionBrutalProps = {
+  faqs?: Faq[];
+};
+
+const defaultFaqs: Faq[] = [
   {
     question: "LuxiDev est-il vraiment gratuit ?",
     answer:
@@ -37,10 +46,12 @@ const defaultFaqs = [
   },
 ];
 
-export default function FaqSectionBrutal({ faqs = defaultFaqs }) {
-  const [openIndex, setOpenIndex] = useState(null);
+export default function FaqSectionBrutal({
+  faqs = defaultFaqs,
+}: FaqSectionBrutalProps) {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-  const toggleFaq = (index) => {
+  const toggleFaq = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
   };
 
@@ -71,7 +82,7 @@ export default function FaqSectionBrutal({ faqs = defaultFaqs }) {
 
         {/* FAQ à droite */}
         <div className="flex-1 flex flex-col gap-4">
-          {faqs.map((faq, index) => (
+          {faqs.map((faq: Faq, index: number) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 10 }}

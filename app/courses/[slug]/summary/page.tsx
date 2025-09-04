@@ -15,7 +15,6 @@ interface Course {
   slug: string;
   title: string;
   description: string;
-  image: string | null;
   technologies: string[];
   level: string;
   duration: string;
