@@ -67,7 +67,6 @@
     "tsparticles": "^3.9.1",
     "tsparticles-engine": "^2.12.0",
     "uuid": "^11.1.0",
-    "web": "link:shiki/bundle/web",
     "zustand": "^5.0.6"
   },
   "devDependencies": {
