@@ -37,12 +37,24 @@ export default async function LessonPage({
 }: {
   params: Promise<{ slug: string; lessonSlug: string }>;
 }) {
-  // Récupérer les données de la leçon et du cours
-  const { course, lesson } = await fetchLesson(params);
+  const lessonData = await fetchLesson(params);
+
+  // ⚠️ Vérification du fallback
+  if (!lessonData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-600 font-bold">
+        Impossible de charger la leçon pour le moment.
+      </div>
+    );
+  }
+
+  // TypeScript sait maintenant que lessonData n'est pas null
+  const { course, lesson } = lessonData;
 
   return (
-    <div className="min-h-screen   ">
+    <div className="min-h-screen">
       <ClientLessonContent course={course} lesson={lesson} />
     </div>
   );
 }
+
