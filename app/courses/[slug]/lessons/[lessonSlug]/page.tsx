@@ -2,21 +2,34 @@
 import { Course, Lesson } from "./types";
 import ClientLessonContent from "./ClientLessonContent";
 
-// Fonction de récupération des données de la leçon (serveur)
+// Fonction de récupération des données de la leçon (serveur) avec fallback
 async function fetchLesson(
   params: Promise<{ slug: string; lessonSlug: string }>
-): Promise<{ course: Course; lesson: Lesson }> {
-  const { slug, lessonSlug } = await params;
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/api/courses/${slug}/lessons/${lessonSlug}`,
-    
-  );
+): Promise<{ course: Course; lesson: Lesson } | null> {
+  try {
+    const { slug, lessonSlug } = await params;
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch lesson data");
+    if (!baseUrl) {
+      console.warn("NEXT_PUBLIC_BASE_URL non défini, fallback utilisé");
+      return null; // fallback null
+    }
+
+    const res = await fetch(
+      `${baseUrl}/api/courses/${slug}/lessons/${lessonSlug}`,
+      { next: { revalidate: 3600 } }
+    );
+
+    if (!res.ok) {
+      console.warn("Erreur API lors du fetch de la leçon, fallback utilisé");
+      return null; // fallback null
+    }
+
+    return await res.json();
+  } catch (err) {
+    console.warn("Impossible de fetcher la leçon :", err);
+    return null; // fallback null
   }
-
-  return res.json();
 }
 
 export default async function LessonPage({

@@ -36,7 +36,6 @@ const Separator = () => (
 );
 
 const CourseModule = ({ course, index }: { course: Course; index: number }) => {
-  const router = useRouter();
 
   return (
     <motion.div
