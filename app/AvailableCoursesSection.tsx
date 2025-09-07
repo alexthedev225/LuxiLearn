@@ -7,7 +7,7 @@ export default async function CoursesPage() {
   const limitedCourses = courses.slice(0, 2);
 
   return (
-    <div className="relative min-h-screen w-full px-4 sm:px-6 py-8 sm:py-32">
+    <div className="relative  w-full px-4 sm:px-6 py-8 sm:py-20">
       <div className="relative z-10 max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-10">
         {/* Texte à gauche */}
         <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left">

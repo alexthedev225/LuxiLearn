@@ -35,7 +35,7 @@ const items = [
 
 export default function WhyLuxiDevModern() {
   return (
-    <section className="relative w-full py-10 sm:py-32 px-4 sm:px-6 min-h-screen">
+    <section className="relative w-full py-10 sm:py-20 px-4 sm:px-6 ">
       <div className="relative z-10 max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-10">
         {/* Texte à gauche */}
         <motion.div

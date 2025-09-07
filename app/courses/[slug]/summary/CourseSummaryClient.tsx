@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { useProgressStore } from "@/stores/useProgressStore";
 import { useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
@@ -52,7 +53,6 @@ const Separator = () => (
 const ProgressCard = ({
   progress,
   index,
-  courseSlug,
 }: {
   progress: LessonProgress;
   index: number;
@@ -236,13 +236,14 @@ export default function CourseSummaryClient({ course }: Props) {
         </div>
 
         <div className="flex flex-wrap gap-1 sm:gap-2">
-          <button
-            onClick={() => router.push(`/courses/${course.slug}`)}
-            className="px-2 py-1 sm:px-3 sm:py-1.5 border-2 border-black dark:border-white bg-white dark:bg-neutral-950 font-bold uppercase tracking-wide text-xs sm:text-sm hover:-translate-y-0.5 transition-transform duration-200 rounded"
+          <Link
+            href={`/courses/${course.slug}`}
+            className="inline-block px-2 py-1 sm:px-3 sm:py-1.5 border-2 border-black dark:border-white bg-white dark:bg-neutral-950 font-bold uppercase tracking-wide text-xs sm:text-sm hover:-translate-y-0.5 transition-transform duration-200 rounded"
             aria-label="Retour au cours"
           >
             ← Cours
-          </button>
+          </Link>
+
           <button
             onClick={handleRestart}
             className="px-2 py-1 sm:px-3 sm:py-1.5 bg-red-600 text-white font-bold uppercase tracking-wide border-2 border-red-600 text-xs sm:text-sm hover:-translate-y-0.5 transition-transform duration-200 rounded"

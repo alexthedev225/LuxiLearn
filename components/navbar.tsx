@@ -32,7 +32,7 @@ export default function Navbar() {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-neutral-950 "
+      className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-black "
     >
       <nav className="max-w-6xl mx-auto py-2 sm:py-3 flex items-center justify-between gap-2 sm:gap-4 ">
         {/* Logo */}
@@ -86,7 +86,7 @@ export default function Navbar() {
             animate={{ opacity: 1, maxHeight: "100vh" }}
             exit={{ opacity: 0, maxHeight: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden border-t-2 border-black dark:border-white bg-white dark:bg-neutral-950 overflow-hidden"
+            className="md:hidden border-t-2 border-black dark:border-white bg-white dark:bg-black overflow-hidden"
           >
             <nav className="flex flex-col p-2 sm:p-3 gap-2 sm:gap-3">
               {links.map(({ href, label }, index) => (

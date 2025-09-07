@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Minus, Plus } from "lucide-react";
+import Link from "next/link";
 
 interface Lesson {
   id: string | number;
@@ -119,14 +119,14 @@ const CourseModule = ({ course, index }: { course: Course; index: number }) => {
         </div>
       </div>
 
-      {/* Button */}
-      <button
-        onClick={() => router.push(`/courses/${course.slug}`)}
-        className="w-full bg-red-600 text-white font-black py-1.5 px-3 text-xs sm:text-sm uppercase tracking-wide border-2 border-black dark:border-white transition-all duration-200 hover:-translate-y-0.5 rounded"
+      {/* Link Button */}
+      <Link
+        href={`/courses/${course.slug}`}
+        className="w-full inline-block text-center bg-red-600 text-white font-black py-1.5 px-3 text-xs sm:text-sm uppercase tracking-wide border-2 border-black dark:border-white transition-all duration-200 hover:-translate-y-0.5 rounded"
         aria-label={`Commencer le parcours ${course.title}`}
       >
         Commencer →
-      </button>
+      </Link>
     </motion.div>
   );
 };
@@ -161,19 +161,19 @@ export default function CoursesClient({ courses }: { courses: Course[] }) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto min-h-screen text-neutral-900 dark:text-neutral-100  py-32 ">
+    <div className="max-w-6xl mx-auto min-h-screen text-neutral-900 dark:text-neutral-100  ">
       {/* Hero Section - Parcours */}
       <section className="mb-6 sm:mb-8">
         {/* Navigation */}
         <nav className="mb-4 sm:mb-6">
           <div className="flex items-center gap-1 text-2xs sm:text-xs font-bold">
-            <button
-              onClick={() => router.push("/")}
-              className="hover:text-red-600 transition-colors duration-200 cursor-pointer px-1 py-0.5"
+            <Link
+              href="/"
+              className="hover:text-red-600 transition-colors duration-200 px-1 py-0.5"
               aria-label="Retour à l'accueil"
             >
               ACCUEIL
-            </button>
+            </Link>
             <span>→</span>
             <span>PARCOURS</span>
           </div>
@@ -197,7 +197,6 @@ export default function CoursesClient({ courses }: { courses: Course[] }) {
         </header>
       </section>
 
-   
       {/* Courses */}
       <section className="space-y-4 sm:space-y-6">
         <AnimatePresence mode="wait">
@@ -210,9 +209,8 @@ export default function CoursesClient({ courses }: { courses: Course[] }) {
         </AnimatePresence>
       </section>
 
-   
       {/* CTA Bottom */}
-      <div className="text-center mt-8 sm:mt-12  pt-4 sm:pt-6">
+      <div className="text-center mt-8 sm:mt-12 pt-4 sm:pt-6">
         <div className="h-0.5 sm:h-1 bg-red-600 w-8 sm:w-12 mx-auto mb-2 sm:mb-3" />
         <h2
           className="text-lg sm:text-xl md:text-2xl font-black uppercase tracking-wide mb-2 sm:mb-3"
@@ -220,12 +218,15 @@ export default function CoursesClient({ courses }: { courses: Course[] }) {
         >
           Passion → <span className="text-red-600">Expertise</span>
         </h2>
-        <button
-          className="bg-red-600 text-white font-black py-2 px-4 text-xs sm:text-sm uppercase tracking-wide border-2 border-black dark:border-white transition-all duration-200 hover:-translate-y-0.5 rounded"
-          aria-label="Commencer maintenant"
-        >
-          Commencer →
-        </button>
+        {courses && courses.length > 0 && (
+          <Link
+            href={`/courses/${courses[0].slug}`}
+            className="inline-block bg-red-600 text-white font-black py-2 px-4 text-xs sm:text-sm uppercase tracking-wide border-2 border-black dark:border-white transition-all duration-200 hover:-translate-y-0.5 rounded"
+            aria-label={`Commencer le parcours ${courses[0].title}`}
+          >
+            Commencer maintenant →
+          </Link>
+        )}
       </div>
     </div>
   );

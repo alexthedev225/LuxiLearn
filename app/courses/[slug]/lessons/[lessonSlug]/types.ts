@@ -10,12 +10,10 @@ export type Quiz = {
 
 // ==== Exercise ====
 export type Exercise = {
-  description: string;
-  starterCode?: string; // code de départ pour l'exercice
-  solutionCode?: string; // solution finale
-  validateCode?: string; // chaîne de fonction pour validation dynamique (optionnelle)
-  prompt?: string; // texte à afficher dans le composant interactif
-  solution?: string; // solution visible après validation ou indice
+  title: string;
+  prompt: string; // code de départ pour l'exercice
+  solution: string; // solution finale
+  validateCode: string; // chaîne de fonction pour validation dynamique (optionnelle)
 };
 
 // ==== Lesson ====

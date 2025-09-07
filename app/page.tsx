@@ -28,21 +28,21 @@ export default async function Home() {
 
   return (
     <div className="relative w-full min-h-screen flex flex-col bg-white dark:bg-black text-black dark:text-white space-y-12">
-      <main className="flex-1 py-32 ">
+      <main className="flex-1  ">
         {/* Hero */}
         <HeroSection />
 
         {/* Separator */}
-        <div className="w-full h-0.5 sm:h-1 bg-red-600 border-t border-b border-black dark:border-white max-w-6xl mx-auto my-8" />
+        <div className="w-full h-0.5 sm:h-1 bg-red-600 border-t border-b border-black dark:border-white max-w-6xl mx-auto " />
 
         <AvailableCoursesSection />
 
-        <div className="w-full h-0.5 sm:h-1 bg-red-600 border-t border-b border-black dark:border-white max-w-6xl mx-auto my-8" />
+        <div className="w-full h-0.5 sm:h-1 bg-red-600 border-t border-b border-black dark:border-white max-w-6xl mx-auto " />
 
         {/* Pourquoi LuxiDev */}
         <WhyLuxiDev />
 
-        <div className="w-full h-0.5 sm:h-1 bg-red-600 border-t border-b border-black dark:border-white max-w-6xl mx-auto my-8" />
+        <div className="w-full h-0.5 sm:h-1 bg-red-600 border-t border-b border-black dark:border-white max-w-6xl mx-auto " />
 
         {/* FAQ */}
         <FaqSection faqs={faqs} />

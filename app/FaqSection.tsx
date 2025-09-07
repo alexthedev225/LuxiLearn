@@ -56,7 +56,7 @@ export default function FaqSectionBrutal({
   };
 
   return (
-    <section className="relative w-full py-10 sm:pt-32 px-4 sm:px-6 ">
+    <section className="relative w-full py-10 sm:py-20 px-4 sm:px-6 ">
       <div className="relative z-10 max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-10 ">
         {/* Texte à gauche */}
         <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left">

@@ -15,7 +15,7 @@ export interface ExerciseInteractiveProps {
   prompt: string;
   solution: string;
   title: string;
-  validate?: (args: { code: string }) => ValidationResult;
+  validateCode?: (args: { code: string }) => ValidationResult;
   onValidateSuccess?: () => void;
 }
 // Déclarer monaco sur window pour TypeScript
@@ -30,7 +30,7 @@ export default function ExerciseInteractive({
   solution,
   title,
   onValidateSuccess,
-  validate,
+  validateCode,
 }: ExerciseInteractiveProps) {
   const [code, setCode] = useState<string>(prompt);
   const [validationMessage, setValidationMessage] = useState<string>("");
@@ -87,7 +87,7 @@ export default function ExerciseInteractive({
     code.replace(/\s+/g, " ").trim().toLowerCase();
 
   const handleValidate = () => {
-    if (!validate) {
+    if (!validateCode) {
       const normalizedUserCode = normalizeCode(code);
       const normalizedSolution = normalizeCode(solution);
       if (normalizedUserCode === normalizedSolution) {
@@ -102,14 +102,24 @@ export default function ExerciseInteractive({
     }
 
     try {
-      const result = validate({ code });
-      if (result === true || (typeof result === "object" && result.success)) {
+      const result = validateCode({ code });
+
+      if (result === true) {
         setValidationSuccess(true);
         setValidationMessage("✅ Correct");
         onValidateSuccess?.();
       } else if (typeof result === "string") {
         setValidationSuccess(false);
         setValidationMessage("❌ " + result);
+      } else if (typeof result === "object") {
+        if (result.success) {
+          setValidationSuccess(true);
+          setValidationMessage("✅ " + (result.message ?? "Correct"));
+          onValidateSuccess?.();
+        } else {
+          setValidationSuccess(false);
+          setValidationMessage("❌ " + (result.message ?? "Incorrect"));
+        }
       } else {
         setValidationSuccess(false);
         setValidationMessage("❌ Incorrect");
@@ -119,6 +129,7 @@ export default function ExerciseInteractive({
       setValidationMessage("❌ Error");
     }
   };
+
 
   const handleReset = () => {
     setCode(prompt);
@@ -274,7 +285,7 @@ monacoInstance.editor.setTheme(getTheme());
               <h3 className="text-sm font-black uppercase tracking-wide text-neutral-800 dark:text-white">
                 Solution
               </h3>
-              <div className="prose max-w-none text-neutral-900 dark:text-white prose-h1:text-lg prose-h2:text-base prose-h3:text-sm prose-p:text-xs prose-li:text-xs">
+              <div className="prose prose-invert max-w-none mb-6 sm:mb-8">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   rehypePlugins={[rehypeHighlight]}

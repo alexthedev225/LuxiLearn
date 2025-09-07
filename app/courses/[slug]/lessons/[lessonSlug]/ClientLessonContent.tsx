@@ -32,12 +32,13 @@ export default function ClientLessonContent({ course, lesson }: Props) {
 
   const { setLessonProgress, getLessonProgress } = useProgressStore();
 
-  // Safe dynamic validation function
   const safeFunctionFromString = (
     fnString: string
   ): ((args: { code: string }) => ValidationResult) | null => {
     try {
-      const fn = new Function(`${fnString}; return validateCode`)();
+      // Supprime les annotations de type { ... } après les arguments
+      const cleanedFnString = fnString.replace(/:\s*\{[^}]+\}/g, "");
+      const fn = new Function(`${cleanedFnString}; return validateCode`)();
       if (typeof fn === "function") return fn;
       return null;
     } catch (err) {
@@ -49,6 +50,7 @@ export default function ClientLessonContent({ course, lesson }: Props) {
     }
   };
 
+  console.log("validateFn", validateFn);
   // Initialize answers from progress
   useEffect(() => {
     if (!lesson) return;
@@ -143,7 +145,7 @@ export default function ClientLessonContent({ course, lesson }: Props) {
     allQuizAnswered && quizValidated && (!lesson.exercise || exerciseCompleted);
 
   return (
-    <div className="min-h-screen max-w-4xl mx-auto text-neutral-900 dark:text-neutral-100 py-32 px-4 sm:px-6">
+    <div className="min-h-screen max-w-4xl mx-auto text-neutral-900 dark:text-neutral-100  px-4 sm:px-6">
       {/* Header & Navigation */}
       <section className="mb-6 sm:mb-8">
         <nav className="mb-4 sm:mb-6">
@@ -177,7 +179,7 @@ export default function ClientLessonContent({ course, lesson }: Props) {
       </section>
 
       {/* Markdown content */}
-      <section className="mb-6 sm:mb-8">
+      <section className="prose prose-invert max-w-none mb-6 sm:mb-8">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           rehypePlugins={[rehypeRaw, rehypeHighlight]}
@@ -190,10 +192,10 @@ export default function ClientLessonContent({ course, lesson }: Props) {
       {lesson.exercise && (
         <section className="mb-6 sm:mb-8">
           <ExerciseInteractive
-            title={lesson.exercise.description ?? "Exercice"} // <- obligatoire
-            prompt={lesson.exercise.starterCode ?? ""}
-            solution={lesson.exercise.solutionCode ?? ""}
-            validate={validateFn ?? undefined}
+            title={lesson.exercise.title ?? "Exercice"} // <- obligatoire
+            prompt={lesson.exercise.prompt ?? ""}
+            solution={lesson.exercise.solution ?? ""}
+            validateCode={validateFn ?? undefined}
             onValidateSuccess={() => setExerciseCompleted(true)}
           />
         </section>
