@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, FocusEvent } from "react";
+import { useState, useRef, useEffect} from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 
 // Types

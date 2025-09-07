@@ -2,7 +2,6 @@
 import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
 import clsx from "clsx";
-import { HighlightThemeLoader } from "./HighlightThemeLoader"; // utile pour Prism/Highlight.js
 import { fontSans } from "@/config/fonts";
 import LayoutWrapper from "./LayoutWrapper";
 

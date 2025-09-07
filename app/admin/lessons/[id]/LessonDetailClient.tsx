@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, Clock, ArrowLeft, Edit } from "lucide-react";
+import { BookOpen, ArrowLeft, Edit } from "lucide-react";
 import dynamic from "next/dynamic";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";

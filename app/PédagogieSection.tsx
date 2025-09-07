@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { SiJavascript } from "react-icons/si";
 import { motion } from "framer-motion";
 import { Zap, Target, Award, BookOpen } from "lucide-react";
 

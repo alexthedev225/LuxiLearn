@@ -4,7 +4,7 @@ import React from "react";
 import { SiJavascript, SiReact, SiNextdotjs } from "react-icons/si";
 
 import { motion } from "framer-motion";
-import { Code2, Eye, Heart, Users, Sparkles } from "lucide-react";
+import {  Sparkles } from "lucide-react";
 
 const items = [
   {

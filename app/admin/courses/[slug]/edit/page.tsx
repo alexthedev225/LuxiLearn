@@ -3,9 +3,20 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import EditCourseClient from "@/components/admin/EditCourseClient";
 
-export default async function EditCoursePage({ params }) {
+interface Params {
+  slug: string;
+}
+
+export default async function EditCoursePage({
+  params,
+}: {
+  params: Promise<Params>;
+}) {
   const { slug } = await params;
-  const course = await prisma.course.findUnique({ where: { slug } });
+
+  const course = await prisma.course.findUnique({
+    where: { slug },
+  });
 
   if (!course) return notFound();
 

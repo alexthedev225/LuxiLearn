@@ -6,9 +6,9 @@ import AdminCourseClient from "./AdminCourseClient";
 export default async function AdminCoursePage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const { slug } = params;
+  const { slug } = await params;
 
   try {
     const course = await prisma.course.findUniqueOrThrow({
@@ -31,3 +31,4 @@ export default async function AdminCoursePage({
     return notFound();
   }
 }
+

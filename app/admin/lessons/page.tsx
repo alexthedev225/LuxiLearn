@@ -3,45 +3,52 @@ import { prisma } from "@/lib/prisma";
 import LessonsTable from "@/components/admin/LessonsTable";
 
 interface Course {
-  id: number;
+  id: string;
   title: string;
-  slug: string;
 }
 
 interface Lesson {
-  id: number;
+  id: string;
   title: string;
-  description: string;
   duration: string;
-  slug: string;
   course: Course;
 }
 
 export default async function LessonsAdmin() {
   try {
     // Récupérer les leçons
-    const lessons = await prisma.lesson.findMany({
+    const lessonsRaw = await prisma.lesson.findMany({
       select: {
         id: true,
         title: true,
-        description: true,
         duration: true,
-        slug: true,
         course: {
           select: {
             id: true,
             title: true,
-            slug: true,
           },
         },
       },
       orderBy: { createdAt: "desc" },
     });
 
+    // Convertir les IDs en string pour matcher le type côté client
+    const lessons: Lesson[] = lessonsRaw.map((l) => ({
+      id: String(l.id),
+      title: l.title,
+      duration: l.duration ?? "",
+      course: { id: String(l.course.id), title: l.course.title },
+    }));
+
     // Récupérer les cours
-    const courses = await prisma.course.findMany({
-      select: { id: true, title: true, slug: true },
+    const coursesRaw = await prisma.course.findMany({
+      select: { id: true, title: true },
     });
+
+    const courses: Course[] = coursesRaw.map((c) => ({
+      id: String(c.id),
+      title: c.title,
+    }));
 
     return <LessonsTable lessons={lessons} courses={courses} />;
   } catch (error) {
