@@ -33,10 +33,16 @@ export default async function CoursesPage() {
             Catalogue complet
           </div>
 
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-wide uppercase text-neutral-900 dark:text-neutral-100 leading-tight mb-2">
+          <h1
+            className="text-3xl sm:text-4xl md:text-5xl font-black tracking-wide uppercase text-neutral-900 dark:text-neutral-100 leading-tight mb-2"
+            style={{ fontSize: "clamp(1.75rem, 4vw, 2.5rem)" }}
+          >
             Nos cours
           </h1>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-wide uppercase text-red-600 leading-tight mb-3">
+          <h2
+            className="text-3xl sm:text-4xl md:text-5xl font-black tracking-wide uppercase text-red-600 leading-tight mb-3"
+            style={{ fontSize: "clamp(1.75rem, 4vw, 2.5rem)" }}
+          >
             D'EXCEPTION
           </h2>
 
