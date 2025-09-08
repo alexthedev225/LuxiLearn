@@ -174,7 +174,7 @@ export const HeroSection = () => {
   useEffect(() => setIsVisible(true), []);
 
   return (
-    <section className="relative bg-white dark:bg-black text-black dark:text-white py-20 px-6">
+    <section className="relative bg-white dark:bg-black text-black dark:text-white py-12 px-6">
       <div className="relative z-10 w-full  sm:max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-0 ">
         {/* Texte */}
         <motion.div

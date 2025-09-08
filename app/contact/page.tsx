@@ -79,10 +79,10 @@ export default function ImmersiveContactSection() {
   }, [submitted]);
 
   return (
-    <div className="relative min-h-screen bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 mx-4 sm:mx-6">
+    <div className="relative min-h-screen bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 mx-4 sm:mx-6 py-10">
       <div className="relative z-10 max-w-6xl mx-auto">
         {/* Header */}
-        <motion.section ref={headerRef} className="pb-10 pt-30">
+        <motion.section ref={headerRef} className="mb-10">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={headerInView ? { opacity: 1, y: 0 } : {}}
@@ -122,7 +122,7 @@ export default function ImmersiveContactSection() {
         <Separator />
 
         {/* Form */}
-        <motion.section ref={formRef} className="py-8 sm:py-10">
+        <motion.section ref={formRef} className="pt-8 sm:pt-10">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={formInView ? { opacity: 1, y: 0 } : {}}

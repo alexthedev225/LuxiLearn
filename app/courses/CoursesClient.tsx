@@ -160,7 +160,7 @@ export default function CoursesClient({ courses }: { courses: Course[] }) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto min-h-screen text-neutral-900 dark:text-neutral-100  ">
+    <div className="max-w-4xl mx-auto min-h-screen text-neutral-900 dark:text-neutral-100  ">
       {/* Hero Section - Parcours */}
       <section className="mb-6 sm:mb-8">
         {/* Navigation */}
@@ -168,7 +168,7 @@ export default function CoursesClient({ courses }: { courses: Course[] }) {
           <div className="flex items-center gap-1 text-2xs sm:text-xs font-bold">
             <Link
               href="/"
-              className="hover:text-red-600 transition-colors duration-200 px-1 py-0.5"
+              className="hover:text-red-600 transition-colors duration-200  py-0.5"
               aria-label="Retour à l'accueil"
             >
               ACCUEIL

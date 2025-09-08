@@ -152,7 +152,7 @@ export default function ClientLessonContent({ course, lesson }: Props) {
           <div className="flex items-center gap-1 text-2xs sm:text-xs font-bold uppercase tracking-wide">
             <NextLink
               href={`/courses/${course.slug}`}
-              className="hover:text-red-600 transition-transform duration-200 px-1 py-0.5"
+              className="hover:text-red-600 transition-transform duration-200  py-0.5"
             >
               {course.title.toUpperCase()}
             </NextLink>

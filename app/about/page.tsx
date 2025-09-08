@@ -115,9 +115,9 @@ const AboutPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 font-sans mx-4 sm:mx-6">
+    <div className="min-h-screen bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 font-sans mx-4 sm:mx-6 py-20">
       {/* HERO SECTION */}
-      <div className="max-w-6xl mx-auto pt-32">
+      <div className="max-w-6xl mx-auto ">
         <section className="grid lg:grid-cols-2 gap-6 sm:gap-8 pb-10">
           {/* Texte */}
           <motion.div
@@ -303,7 +303,7 @@ const AboutPage = () => {
         <Separator />
 
         {/* CTA */}
-        <section className="pt-8 sm:pt-10 flex flex-col items-center gap-4 sm:gap-6 pb-20">
+        <section className="pt-8 sm:pt-10 flex flex-col items-center gap-4 sm:gap-6 ">
           <h2
             className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-wide mb-2"
             style={{ fontSize: "clamp(1.5rem, 4vw, 2rem)" }}
