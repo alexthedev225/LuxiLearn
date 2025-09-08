@@ -36,8 +36,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
-  const [closingMenu, setClosingMenu] = useState<boolean>(false);
-  const menuRef = useRef<HTMLDivElement | null>(null);
+  const menuContainerRef = useRef<HTMLDivElement | null>(null);
+  const mobileMenuRef = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname() ?? "";
 
   const navItems: NavItem[] = [
@@ -62,16 +62,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     },
   ];
 
-  const toggleSubMenu = (label: string) => {
-    if (expandedMenu === label) {
-      setClosingMenu(true);
-      setTimeout(() => {
-        setExpandedMenu(null);
-        setClosingMenu(false);
-      }, 200);
-    } else {
-      setExpandedMenu(label);
-    }
+  const toggleSubMenu = (label: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Empêche la propagation de l'événement click au document
+    setExpandedMenu(expandedMenu === label ? null : label);
   };
 
   const handleLogout = async () => {
@@ -87,25 +80,26 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     }
   };
 
+  // Gestion des clics en dehors (pour desktop et mobile)
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setClosingMenu(true);
-        setTimeout(() => {
-          setExpandedMenu(null);
-          setClosingMenu(false);
-        }, 200);
+      const isOutsideDesktop =
+        menuContainerRef.current &&
+        !menuContainerRef.current.contains(event.target as Node);
+      const isOutsideMobile =
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target as Node);
+      if (expandedMenu && (isOutsideDesktop || isOutsideMobile)) {
+        setExpandedMenu(null);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [expandedMenu]);
 
   return (
     <div
-      className={`${
-        darkMode ? "dark" : ""
-      } min-h-screen bg-white dark:bg-black text-black dark:text-white`}
+      className={`${darkMode ? "dark" : ""} min-h-screen bg-white dark:bg-black text-black dark:text-white`}
     >
       {/* Top Bar */}
       <motion.header
@@ -114,7 +108,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         transition={{ duration: 0.4 }}
         className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-black border-b-2 border-black dark:border-white flex items-center justify-between px-4 py-4 lg:px-32"
       >
-        {/* Bouton retour au site */}
         <div className="flex items-center gap-2 min-w-[150px]">
           <Link
             href="/"
@@ -126,36 +119,38 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </div>
 
         {/* Nav desktop */}
-        <nav className="hidden lg:flex items-center gap-6">
+        <div
+          ref={menuContainerRef}
+          className="hidden lg:flex items-center gap-6"
+        >
           {navItems.map((item) => {
             const isActive =
               pathname === item.path ||
               item.subItems?.some((sub) => pathname.startsWith(sub.path));
             const Icon = item.icon;
             const isExpanded = expandedMenu === item.label;
+
             return (
-              <div key={item.path} className="relative" ref={menuRef}>
+              <div key={item.path} className="relative">
                 {item.subItems ? (
                   <button
                     className="flex items-center gap-2 px-3 py-2 border-2 border-black dark:border-white font-bold uppercase tracking-wide text-sm hover:translate-y-[-1px] transition-transform duration-200"
-                    onClick={() => toggleSubMenu(item.label)}
+                    onClick={(e) => toggleSubMenu(item.label, e)}
                   >
                     <Icon
-                      className={`${
+                      className={
                         isActive ? "text-red-600" : "text-black dark:text-white"
-                      }`}
+                      }
                     />
                     <span
-                      className={`${
+                      className={
                         isActive ? "text-red-600" : "text-black dark:text-white"
-                      }`}
+                      }
                     >
                       {item.label}
                     </span>
                     <ChevronDown
-                      className={`w-4 h-4 transition-transform ${
-                        isExpanded ? "rotate-180" : ""
-                      }`}
+                      className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
                     />
                   </button>
                 ) : (
@@ -164,14 +159,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     className="flex items-center gap-2 px-3 py-2 border-2 border-black dark:border-white font-bold uppercase tracking-wide text-sm hover:translate-y-[-1px] transition-transform duration-200"
                   >
                     <Icon
-                      className={`${
+                      className={
                         isActive ? "text-red-600" : "text-black dark:text-white"
-                      }`}
+                      }
                     />
                     <span
-                      className={`${
+                      className={
                         isActive ? "text-red-600" : "text-black dark:text-white"
-                      }`}
+                      }
                     >
                       {item.label}
                     </span>
@@ -179,65 +174,73 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 )}
 
                 {/* Submenu */}
-                {item.subItems && (isExpanded || closingMenu) && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-black border-2 border-black dark:border-white z-20"
-                  >
-                    {item.subItems.map((sub) => {
-                      const SubIcon = sub.icon;
-                      const isSubActive = pathname === sub.path;
-                      return (
-                        <Link
-                          key={sub.path}
-                          href={sub.path}
-                          onClick={() => setExpandedMenu(null)}
-                        >
-                          <motion.div
-                            whileHover={{ x: 2 }}
-                            className={`flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-wide border-b-2 border-black dark:border-white ${
-                              isSubActive
-                                ? "text-red-600"
-                                : "text-black dark:text-white"
-                            }`}
+                <AnimatePresence>
+                  {item.subItems && isExpanded && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-black border-2 border-black dark:border-white z-20"
+                    >
+                      {item.subItems.map((sub) => {
+                        const SubIcon = sub.icon;
+                        const isSubActive = pathname === sub.path;
+                        return (
+                          <Link
+                            key={sub.path}
+                            href={sub.path}
+                            onClick={() => setExpandedMenu(null)}
                           >
-                            <SubIcon className="w-4 h-4" />
-                            <span>{sub.label}</span>
-                          </motion.div>
-                        </Link>
-                      );
-                    })}
-                  </motion.div>
-                )}
+                            <motion.div
+                              whileHover={{ x: 2 }}
+                              className={`flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-wide border-b-2 border-black dark:border-white ${
+                                isSubActive
+                                  ? "text-red-600"
+                                  : "text-black dark:text-white"
+                              }`}
+                            >
+                              <SubIcon className="w-4 h-4" />
+                              <span>{sub.label}</span>
+                            </motion.div>
+                          </Link>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             );
           })}
-        </nav>
+        </div>
 
-        {/* Bouton Logout desktop */}
-        <button
-          onClick={handleLogout}
-          className="hidden lg:flex items-center gap-2 px-3 py-2 border-2 border-red-600 text-red-600 font-bold uppercase tracking-wide text-sm hover:bg-red-600 hover:text-white transition-colors duration-200"
-        >
-          <LogOut className="w-5 h-5" />
-        </button>
+        {/* Logout & Hamburger */}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={handleLogout}
+            className="hidden lg:flex items-center gap-2 px-3 py-2 border-2 border-red-600 text-red-600 font-bold uppercase tracking-wide text-sm hover:bg-red-600 hover:text-white transition-colors duration-200"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
 
-        {/* Hamburger mobile */}
-        <button
-          className="lg:hidden p-2 border-2 border-black dark:border-white rounded"
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+          <button
+            className="lg:hidden p-2 border-2 border-black dark:border-white rounded"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            {menuOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
+          </button>
+        </div>
       </motion.header>
 
       {/* Mobile Menu */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
+            ref={mobileMenuRef}
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -255,30 +258,67 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 return (
                   <div key={item.path} className="mb-2">
                     {item.subItems ? (
-                      <button
-                        className="flex items-center gap-2 px-3 py-2 border-2 border-black dark:border-white font-bold uppercase tracking-wide w-full text-left hover:translate-y-[-1px] transition-transform duration-200"
-                        onClick={() => toggleSubMenu(item.label)}
-                      >
-                        <Icon
-                          className={
-                            isActive
-                              ? "text-red-600"
-                              : "text-black dark:text-white"
-                          }
-                        />
-                        <span
-                          className={
-                            isActive
-                              ? "text-red-600"
-                              : "text-black dark:text-white"
-                          }
+                      <>
+                        <button
+                          className="flex items-center gap-2 px-3 py-2 border-2 border-black dark:border-white font-bold uppercase tracking-wide w-full text-left hover:translate-y-[-1px] transition-transform duration-200"
+                          onClick={(e) => toggleSubMenu(item.label, e)}
                         >
-                          {item.label}
-                        </span>
-                        <ChevronDown
-                          className={`w-4 h-4 ${isExpanded ? "rotate-180" : ""}`}
-                        />
-                      </button>
+                          <Icon
+                            className={
+                              isActive
+                                ? "text-red-600"
+                                : "text-black dark:text-white"
+                            }
+                          />
+                          <span
+                            className={
+                              isActive
+                                ? "text-red-600"
+                                : "text-black dark:text-white"
+                            }
+                          >
+                            {item.label}
+                          </span>
+                          <ChevronDown
+                            className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                          />
+                        </button>
+                        {/* Submenu mobile */}
+                        <AnimatePresence>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="pl-4"
+                            >
+                              {item.subItems.map((sub) => {
+                                const SubIcon = sub.icon;
+                                const isSubActive = pathname === sub.path;
+                                return (
+                                  <Link
+                                    key={sub.path}
+                                    href={sub.path}
+                                    onClick={() => {
+                                      setExpandedMenu(null);
+                                      setMenuOpen(false);
+                                    }}
+                                    className={`flex items-center gap-2 px-3 py-2 text-sm font-bold uppercase tracking-wide ${
+                                      isSubActive
+                                        ? "text-red-600"
+                                        : "text-black dark:text-white"
+                                    }`}
+                                  >
+                                    <SubIcon className="w-4 h-4" />
+                                    <span>{sub.label}</span>
+                                  </Link>
+                                );
+                              })}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </>
                     ) : (
                       <Link
                         href={item.path}
@@ -307,7 +347,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 );
               })}
 
-              {/* Bouton Logout mobile */}
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-2 px-3 py-2 border-2 border-red-600 text-red-600 font-bold uppercase tracking-wide w-full text-left hover:bg-red-600 hover:text-white transition-colors duration-200 mt-4"
